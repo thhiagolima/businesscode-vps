@@ -1,0 +1,11 @@
+# Arquivos executados dentro de containers Linux: sempre LF,
+# para que um checkout/clone no Windows não corrompa shebang/sintaxe.
+*.sh        text eol=lf
+*.conf      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.ini       text eol=lf
+Dockerfile  text eol=lf
+.dockerignore text eol=lf
+docker/entrypoint.sh        text eol=lf
+scripts/init-letsencrypt.sh text eol=lf
