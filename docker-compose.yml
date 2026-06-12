@@ -1,0 +1,95 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    image: businesscode/app:latest
+    env_file: [ ./backend/.env ]
+    environment:
+      CONTAINER_ROLE: app
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      mysql:  { condition: service_healthy }
+      redis:  { condition: service_started }
+    restart: unless-stopped
+
+  worker:
+    image: businesscode/app:latest
+    env_file: [ ./backend/.env ]
+    environment:
+      CONTAINER_ROLE: worker
+    command: php artisan queue:work --queue=campaigns,messaging,billing,default --sleep=3 --tries=3 --max-time=3600 --timeout=3600
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      app:   { condition: service_started }
+      redis: { condition: service_started }
+    restart: unless-stopped
+
+  scheduler:
+    image: businesscode/app:latest
+    env_file: [ ./backend/.env ]
+    environment:
+      CONTAINER_ROLE: scheduler
+    command: php artisan schedule:work
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      app: { condition: service_started }
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      target: nginx
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    image: businesscode/nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on: [ app ]
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done'"
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+  storage:
+  letsencrypt:
+  certbot-www:
