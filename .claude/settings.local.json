@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\" /c/xampp/htdocs/new_saas/backend/app --include=*.php)",
+      "Bash(php artisan:*)",
+      "Bash(php -l app/Jobs/ProcessCampaignJob.php)",
+      "Bash(php -l app/Console/Commands/DispatchScheduledCampaigns.php)",
+      "Bash(php -l app/Services/Infobip/InfobipService.php)",
+      "Bash(php -l app/Http/Controllers/API/V1/WebhookController.php)",
+      "Bash(php -l app/Providers/AppServiceProvider.php)",
+      "Bash(npm run:*)",
+      "Bash(grep -n \"ApiResponse::success.*[0-9]\\\\+\\)$\" /c/xampp/htdocs/new_saas/backend/app/Http/Controllers -r)",
+      "Bash(php -l app/Http/Controllers/API/V1/CampaignsController.php)",
+      "Bash(php -l /c/xampp/htdocs/new_saas/backend/app/Http/Controllers/API/V1/AiGeneratorController.php)"
+    ]
+  }
+}

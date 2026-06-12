@@ -1,0 +1,113 @@
+<h2>Step 3 do Wizard — Seleção de Contatos</h2>
+<p class="subtitle">Hoje é apenas um campo numérico de ID. Qual abordagem funciona melhor?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dropdown + Preview</h3>
+      <p>Select com busca das listas existentes. Ao selecionar, mostra card com nome, total de contatos e preview dos 5 primeiros. Botão "Criar nova lista" abre modal inline.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:16px;background:#f8f9fb">
+          <div style="margin-bottom:12px">
+            <label style="font-size:13px;font-weight:600;color:#333">Lista de contatos *</label>
+            <div style="border:1px solid #ddd;border-radius:6px;padding:10px 12px;background:#fff;display:flex;justify-content:space-between;align-items:center">
+              <span style="color:#333">📋 Clientes Premium (2.340 contatos)</span>
+              <span style="color:#999">▾</span>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #e0e5ec;border-radius:8px;padding:12px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-weight:600;font-size:13px">Clientes Premium</span>
+              <span style="background:#e8f4ff;color:#0064ff;padding:2px 8px;border-radius:12px;font-size:12px">2.340 contatos</span>
+            </div>
+            <div style="font-size:12px;color:#666">
+              <div>+55 11 9****-1234 · João Silva</div>
+              <div>+55 21 9****-5678 · Maria Santos</div>
+              <div>+55 31 9****-9012 · Carlos Oliveira</div>
+              <div style="color:#999;margin-top:4px">... e mais 2.337</div>
+            </div>
+          </div>
+          <button style="margin-top:10px;border:1px dashed #0064ff;background:none;color:#0064ff;padding:8px 16px;border-radius:6px;cursor:pointer;width:100%;font-size:13px">+ Criar nova lista</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Cards Visuais</h3>
+      <p>Grid de cards com todas as listas do tenant. Cada card mostra nome, contagem e canal predominante. Busca no topo. Click para selecionar. Indicador visual de seleção.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:16px;background:#f8f9fb">
+          <input class="mock-input" placeholder="🔍 Buscar lista..." style="margin-bottom:12px;width:100%">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:#fff;border:2px solid #0064ff;border-radius:8px;padding:12px;position:relative">
+              <div style="position:absolute;top:8px;right:8px;background:#0064ff;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>
+              <div style="font-weight:600;font-size:13px">Clientes Premium</div>
+              <div style="color:#666;font-size:12px;margin-top:4px">2.340 contatos</div>
+              <div style="margin-top:6px"><span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:11px">SMS</span></div>
+            </div>
+            <div style="background:#fff;border:1px solid #e0e5ec;border-radius:8px;padding:12px">
+              <div style="font-weight:600;font-size:13px">Newsletter</div>
+              <div style="color:#666;font-size:12px;margin-top:4px">890 contatos</div>
+              <div style="margin-top:6px"><span style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:11px">Email</span></div>
+            </div>
+            <div style="background:#fff;border:1px solid #e0e5ec;border-radius:8px;padding:12px">
+              <div style="font-weight:600;font-size:13px">Leads Quentes</div>
+              <div style="color:#666;font-size:12px;margin-top:4px">156 contatos</div>
+              <div style="margin-top:6px"><span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px">Voz</span></div>
+            </div>
+            <div style="border:1px dashed #ccc;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;cursor:pointer">+ Nova lista</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Tabela Compacta + Estimativa</h3>
+      <p>Tabela simples com radio selection, mostrando nome, contatos e estimativa de créditos. Mais direto ao ponto, sem floreios. Ideal para quem tem muitas listas.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:16px;background:#f8f9fb">
+          <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:13px">
+            <thead>
+              <tr style="background:#f1f3f5;text-align:left">
+                <th style="padding:8px 12px;width:30px"></th>
+                <th style="padding:8px 12px">Lista</th>
+                <th style="padding:8px 12px;text-align:right">Contatos</th>
+                <th style="padding:8px 12px;text-align:right">Custo est.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-top:1px solid #eee;background:#f0f7ff">
+                <td style="padding:8px 12px"><div style="width:16px;height:16px;border-radius:50%;border:2px solid #0064ff;background:#0064ff"></div></td>
+                <td style="padding:8px 12px;font-weight:600">Clientes Premium</td>
+                <td style="padding:8px 12px;text-align:right">2.340</td>
+                <td style="padding:8px 12px;text-align:right;color:#0064ff;font-weight:600">2.340 cr</td>
+              </tr>
+              <tr style="border-top:1px solid #eee">
+                <td style="padding:8px 12px"><div style="width:16px;height:16px;border-radius:50%;border:2px solid #ccc"></div></td>
+                <td style="padding:8px 12px">Newsletter</td>
+                <td style="padding:8px 12px;text-align:right">890</td>
+                <td style="padding:8px 12px;text-align:right;color:#666">1.780 cr</td>
+              </tr>
+              <tr style="border-top:1px solid #eee">
+                <td style="padding:8px 12px"><div style="width:16px;height:16px;border-radius:50%;border:2px solid #ccc"></div></td>
+                <td style="padding:8px 12px">Leads Quentes</td>
+                <td style="padding:8px 12px;text-align:right">156</td>
+                <td style="padding:8px 12px;text-align:right;color:#666">780 cr</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;background:#fff3cd;border-radius:6px;padding:8px 12px;font-size:12px;color:#856404">
+            ⚡ Saldo atual: <strong>5.000 cr</strong> · Custo estimado: <strong>2.340 cr</strong> · Restante: <strong>2.660 cr</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const entries = (await getCollection('segmentos')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+<BaseLayout title="Casos de uso por segmento — BusinessCode" description="Como diferentes segmentos usam a BusinessCode para se comunicar com clientes.">
+  <h1>Casos de uso</h1>
+  <ul>
+    {entries.map((e) => (
+      <li><a href={`/para/${e.data.slug}`}>{e.data.title}</a> — {e.data.description}</li>
+    ))}
+  </ul>
+</BaseLayout>

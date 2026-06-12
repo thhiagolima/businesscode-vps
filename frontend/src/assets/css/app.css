@@ -1,0 +1,23 @@
+/* Clickable table rows */
+.table-clickable tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.table-clickable tbody tr:hover {
+  background-color: rgba(0, 100, 255, 0.04);
+}
+
+/* Unsaved changes indicator */
+.unsaved-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-left: 6px;
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

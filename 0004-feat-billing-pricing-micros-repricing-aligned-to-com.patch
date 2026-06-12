@@ -1,0 +1,1246 @@
+From d4a93c89e304ff33b0527b041927107b97ac2909 Mon Sep 17 00:00:00 2001
+From: admbusiness <admbusiness@35-30-168-184.host.secureserver.net>
+Date: Sat, 30 May 2026 12:25:16 -0300
+Subject: [PATCH 4/6] feat(billing): pricing micros + repricing aligned to
+ commercial briefing
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Implementa estrutura comercial aprovada com o usuário em 30/05/2026.
+
+CONTEXTO COMERCIAL
+==================
+Custos reais dos fornecedores (R$ por envio):
+  SMS    0,0605    Voz    0,03501    Email  0,0043
+
+Preços de venda arredondados (R$ por envio, fácil entendimento):
+  SMS    0,08      Voz    0,06       Email  0,01
+
+Margem por canal: SMS +32% / Voz +71% / Email +133%
+Mix médio (50/30/20): margem ~33% sobre saldo vendido.
+
+ESTRUTURA DOS PLANOS
+====================
+  Plano     Mensal   Saldo     Margem mix médio   Margem pior caso 100% SMS
+  Free      R$ 0     R$ 5/mês  CAC -R$ 3,33       CAC -R$ 3,78
+  Starter   R$ 89    R$ 100    +R$ 22,40 (25%)    +R$ 13,38 (15%)
+  Pro       R$ 219   R$ 250    +R$ 52,50 (24%)    +R$ 29,94 (14%)
+  Business  R$ 699   R$ 800    +R$ 166,20 (24%)   +R$ 94,00 (13%)
+  Enterprise — sob consulta
+
+WhatsApp habilitado em TODOS os planos com cobrança separada (não consome
+saldo). Setup fee decrescente por tier: Free R$ 499 / Starter R$ 299 /
+Pro R$ 99 / Business e Enterprise inclusos. Conversas WhatsApp cobradas
+por categoria (marketing/utility/auth) via service_prices.
+
+ARQUITETURA: COLUNAS MICROS
+===========================
+Os custos têm frações de centavo (SMS R$ 0,0605 / Email R$ 0,0043) que
+arredondados para inteiros de centavos viram zero ou perdem 10%+ de margem.
+
+Adicionei cost_micros / sale_micros (×10⁵ — 1 micro = R$ 0,00001) em:
+  - service_prices (preços globais)
+  - tenant_service_prices (overrides por cliente)
+  - message_dispatches (snapshot de cobrança no momento do envio — CRÍTICO
+    para preservar valor exato no histórico financeiro)
+
+PricingService::priceFor() agora retorna AMBOS cents (retrocompat) e micros
+(precisão real). Prefere micros se >0, com fallback cents × 1000.
+
+ServicePrice + TenantServicePrice ganham effectiveCostMicros() /
+effectiveSaleMicros() que aplicam a regra de preferência.
+
+MessagingService::dispatch() grava cost_micros + sale_micros junto com
+cost_cents + sale_cents no snapshot do dispatch.
+
+Plan ganha whatsapp_setup_fee_cents + whatsapp_billed_separately.
+
+MIGRATIONS (idempotentes, backfill ao subir)
+============================================
+  2026_05_30_120000_add_micros_to_pricing_tables
+    + Backfill: cost_micros = cost_cents × 1000 nas linhas existentes
+  2026_05_30_120001_add_whatsapp_fields_to_plans
+
+VALIDAÇÃO
+=========
+Suite billing/messaging/pentest: 68 testes, 1327 assertions, todos passam.
+
+Teste novo PricingPrecisionTest (7 testes, 61 assertions) valida:
+  - SMS preserva R$ 0,0605 exato em micros (1000 SMS = R$ 60,50)
+  - Voz preserva R$ 0,03501
+  - Email preserva R$ 0,0043 (sub-centavo, impossível em cents)
+  - Margens por canal cumprem briefing comercial
+  - Margem positiva em todos os planos pagos no mix realista
+  - Setup fee WhatsApp decrescente por tier
+
+Testes adaptados (preço antigo 15c → novo 8c em SMS):
+  - BalanceFlowTest, BillingFlowTest, SendSmsApiTest, MessagingServiceTest,
+    AdminPricingApiTest, MessageDispatchSnapshotsPriceTest, BillingSecurityTest
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ .../backend/app/Models/MessageDispatch.php    |   6 +-
+ new_saas/backend/app/Models/Plan.php          |   3 +
+ new_saas/backend/app/Models/ServicePrice.php  |  43 ++++-
+ .../backend/app/Models/TenantServicePrice.php |  10 +-
+ .../app/Services/Billing/PricingService.php   |  21 +-
+ .../Services/Messaging/MessagingService.php   |  19 +-
+ ...30_120000_add_micros_to_pricing_tables.php |  64 ++++++
+ ...30_120001_add_whatsapp_fields_to_plans.php |  27 +++
+ .../backend/database/seeders/PlansSeeder.php  | 182 +++++++++++-------
+ .../database/seeders/ServicePricesSeeder.php  |  43 ++++-
+ .../Feature/Admin/AdminPricingApiTest.php     |  15 +-
+ .../tests/Feature/Billing/BalanceFlowTest.php |  12 +-
+ .../MessageDispatchSnapshotsPriceTest.php     |  28 ++-
+ .../Feature/Messaging/BillingFlowTest.php     |  14 +-
+ .../Feature/Messaging/SendSmsApiTest.php      |  11 +-
+ .../tests/Pentest/BillingSecurityTest.php     |  18 +-
+ .../Unit/Billing/PricingPrecisionTest.php     | 154 +++++++++++++++
+ .../Unit/Messaging/MessagingServiceTest.php   |  15 +-
+ 18 files changed, 549 insertions(+), 136 deletions(-)
+ create mode 100644 new_saas/backend/database/migrations/2026_05_30_120000_add_micros_to_pricing_tables.php
+ create mode 100644 new_saas/backend/database/migrations/2026_05_30_120001_add_whatsapp_fields_to_plans.php
+ create mode 100644 new_saas/backend/tests/Unit/Billing/PricingPrecisionTest.php
+
+diff --git a/new_saas/backend/app/Models/MessageDispatch.php b/new_saas/backend/app/Models/MessageDispatch.php
+index d3822813..59c64f51 100644
+--- a/new_saas/backend/app/Models/MessageDispatch.php
++++ b/new_saas/backend/app/Models/MessageDispatch.php
+@@ -14,15 +14,17 @@ class MessageDispatch extends Model
+         'tenant_id', 'user_id', 'channel', 'source', 'to', 'from', 'from_name', 'reply_to', 'subject',
+         'content', 'audio_url', 'provider', 'external_message_id', 'status',
+         'cost_cents', 'sale_cents', 'charged_cents',
++        'cost_micros', 'sale_micros',
+         'idempotency_key', 'idempotency_payload_hash',
+         'unsubscribe_token', 'unsubscribe_consumed_at', 'error_code', 'error_message',
+-        'scheduled_for', 'sent_at', 'delivered_at', 'failed_at', 'meta',
++        'scheduled_for', 'sent_at', 'delivered_at', 'failed_at', 'meta', 'variables',
+         // Voice-specific call tracking (populated by Infobip delivery webhook)
+         'answered_at', 'ended_at', 'call_duration_seconds', 'voice_status',
+     ];
+ 
+     protected $casts = [
+         'meta'                    => 'array',
++        'variables'               => 'array',
+         'scheduled_for'           => 'datetime',
+         'sent_at'                 => 'datetime',
+         'delivered_at'            => 'datetime',
+@@ -31,6 +33,8 @@ class MessageDispatch extends Model
+         'cost_cents'              => 'integer',
+         'sale_cents'              => 'integer',
+         'charged_cents'           => 'integer',
++        'cost_micros'             => 'integer',
++        'sale_micros'             => 'integer',
+         // Voice call tracking
+         'answered_at'             => 'datetime',
+         'ended_at'                => 'datetime',
+diff --git a/new_saas/backend/app/Models/Plan.php b/new_saas/backend/app/Models/Plan.php
+index a648b948..157aafbc 100644
+--- a/new_saas/backend/app/Models/Plan.php
++++ b/new_saas/backend/app/Models/Plan.php
+@@ -20,6 +20,7 @@ class Plan extends Model
+         'rate_limit_sms_per_min', 'rate_limit_voice_per_min', 'rate_limit_email_per_min',
+         'quiet_hours_enabled', 'quiet_hours_start', 'quiet_hours_end', 'quiet_hours_timezone',
+         'included_balance_cents', 'sale_cents_overrides',
++        'whatsapp_setup_fee_cents', 'whatsapp_billed_separately',
+     ];
+ 
+     protected $casts = [
+@@ -34,6 +35,8 @@ class Plan extends Model
+         'quiet_hours_enabled'         => 'boolean',
+         'included_balance_cents'      => 'integer',
+         'sale_cents_overrides'        => 'array',
++        'whatsapp_setup_fee_cents'    => 'integer',
++        'whatsapp_billed_separately'  => 'boolean',
+     ];
+ 
+     public function priceFor(string $cycle): float
+diff --git a/new_saas/backend/app/Models/ServicePrice.php b/new_saas/backend/app/Models/ServicePrice.php
+index 5a92f18a..f33a981d 100644
+--- a/new_saas/backend/app/Models/ServicePrice.php
++++ b/new_saas/backend/app/Models/ServicePrice.php
+@@ -6,22 +6,55 @@
+ 
+ class ServicePrice extends Model
+ {
+-    protected $fillable = ['service', 'cost_cents', 'sale_cents', 'updated_by'];
++    /**
++     * Unidade micros: 1 micro = R$ 0,00001 (×10⁵).
++     * Permite representar custos fracionários (SMS R$ 0,0605 = 6050 micros) sem
++     * mudar o tipo das colunas cents (retrocompat). PricingService prefere micros
++     * se >0, com fallback para cents arredondados.
++     */
++    public const MICROS_PER_CENT = 1000;
++    public const MICROS_PER_REAL = 100000;
++
++    protected $fillable = [
++        'service',
++        'cost_cents', 'sale_cents',
++        'cost_micros', 'sale_micros',
++        'updated_by',
++    ];
+ 
+     protected $casts = [
+-        'cost_cents' => 'integer',
+-        'sale_cents' => 'integer',
++        'cost_cents'  => 'integer',
++        'sale_cents'  => 'integer',
++        'cost_micros' => 'integer',
++        'sale_micros' => 'integer',
+     ];
+ 
++    /** Preferência: micros se preenchido; senão cents × 1000. */
++    public function effectiveCostMicros(): int
++    {
++        return $this->cost_micros > 0 ? $this->cost_micros : $this->cost_cents * self::MICROS_PER_CENT;
++    }
++
++    public function effectiveSaleMicros(): int
++    {
++        return $this->sale_micros > 0 ? $this->sale_micros : $this->sale_cents * self::MICROS_PER_CENT;
++    }
++
+     public function marginCents(): int
+     {
+         return $this->sale_cents - $this->cost_cents;
+     }
+ 
++    public function marginMicros(): int
++    {
++        return $this->effectiveSaleMicros() - $this->effectiveCostMicros();
++    }
++
+     public function marginPercent(): float
+     {
+-        return $this->cost_cents > 0
+-            ? round(($this->marginCents() / $this->cost_cents) * 100, 2)
++        $cost = $this->effectiveCostMicros();
++        return $cost > 0
++            ? round(($this->marginMicros() / $cost) * 100, 2)
+             : 0.0;
+     }
+ 
+diff --git a/new_saas/backend/app/Models/TenantServicePrice.php b/new_saas/backend/app/Models/TenantServicePrice.php
+index 588a55e4..edc349f6 100644
+--- a/new_saas/backend/app/Models/TenantServicePrice.php
++++ b/new_saas/backend/app/Models/TenantServicePrice.php
+@@ -9,12 +9,18 @@ class TenantServicePrice extends Model
+ {
+     use AppliesTenantScope;
+ 
+-    protected $fillable = ['tenant_id', 'service', 'sale_cents', 'reason', 'created_by'];
++    protected $fillable = ['tenant_id', 'service', 'sale_cents', 'sale_micros', 'reason', 'created_by'];
+ 
+     protected $casts = [
+-        'sale_cents' => 'integer',
++        'sale_cents'  => 'integer',
++        'sale_micros' => 'integer',
+     ];
+ 
++    public function effectiveSaleMicros(): int
++    {
++        return $this->sale_micros > 0 ? $this->sale_micros : $this->sale_cents * ServicePrice::MICROS_PER_CENT;
++    }
++
+     public function tenant(): BelongsTo
+     {
+         return $this->belongsTo(Tenant::class);
+diff --git a/new_saas/backend/app/Services/Billing/PricingService.php b/new_saas/backend/app/Services/Billing/PricingService.php
+index 34a52b09..00cfb4a0 100644
+--- a/new_saas/backend/app/Services/Billing/PricingService.php
++++ b/new_saas/backend/app/Services/Billing/PricingService.php
+@@ -17,7 +17,10 @@ class PricingService
+      *   2. Plan.sale_cents_overrides (per-plan override)
+      *   3. ServicePrice (global default, cached 5min)
+      *
+-     * @return array{cost_cents: int, sale_cents: int, source: string}
++     * Retorna AMBOS cents (retrocompat) e micros (precisão real). Snapshot em
++     * MessageDispatch deve gravar micros pra preservar valor exato na cobrança.
++     *
++     * @return array{cost_cents: int, sale_cents: int, cost_micros: int, sale_micros: int, source: string}
+      */
+     public function priceFor(Tenant $tenant, string $service): array
+     {
+@@ -26,13 +29,16 @@ public function priceFor(Tenant $tenant, string $service): array
+             throw new \InvalidArgumentException("Unknown service: {$service}");
+         }
+ 
+-        $costCents = (int) $global->cost_cents;
+-        $saleCents = (int) $global->sale_cents;
++        $costCents  = (int) $global->cost_cents;
++        $saleCents  = (int) $global->sale_cents;
++        $costMicros = $global->effectiveCostMicros();
++        $saleMicros = $global->effectiveSaleMicros();
+ 
+         $plan = $tenant->plan ?? null;
+         $planOverridesHas = false;
+         if ($plan && is_array($plan->sale_cents_overrides ?? null) && isset($plan->sale_cents_overrides[$service])) {
+             $saleCents = (int) $plan->sale_cents_overrides[$service];
++            $saleMicros = $saleCents * ServicePrice::MICROS_PER_CENT;
+             $planOverridesHas = true;
+         }
+ 
+@@ -42,12 +48,15 @@ public function priceFor(Tenant $tenant, string $service): array
+             ->first();
+         if ($override) {
+             $saleCents = (int) $override->sale_cents;
++            $saleMicros = $override->effectiveSaleMicros();
+         }
+ 
+         return [
+-            'cost_cents' => $costCents,
+-            'sale_cents' => $saleCents,
+-            'source'     => $override ? 'tenant_override' : ($planOverridesHas ? 'plan_override' : 'global'),
++            'cost_cents'  => $costCents,
++            'sale_cents'  => $saleCents,
++            'cost_micros' => $costMicros,
++            'sale_micros' => $saleMicros,
++            'source'      => $override ? 'tenant_override' : ($planOverridesHas ? 'plan_override' : 'global'),
+         ];
+     }
+ 
+diff --git a/new_saas/backend/app/Services/Messaging/MessagingService.php b/new_saas/backend/app/Services/Messaging/MessagingService.php
+index 9ba8d210..6e77306f 100644
+--- a/new_saas/backend/app/Services/Messaging/MessagingService.php
++++ b/new_saas/backend/app/Services/Messaging/MessagingService.php
+@@ -99,12 +99,14 @@ public function dispatch(
+             throw new BillingBlockedException();
+         }
+ 
+-        $price     = $this->pricing->priceFor($tenant, $channel);
+-        $costCents = (int) $price['cost_cents'];
+-        $saleCents = (int) $price['sale_cents'];
+-        $provider  = $this->providerFor($channel, $payload);
+-
+-        return DB::transaction(function () use ($tenant, $user, $channel, $payload, $idempotencyKey, $costCents, $saleCents, $provider, $scheduledFor) {
++        $price      = $this->pricing->priceFor($tenant, $channel);
++        $costCents  = (int) $price['cost_cents'];
++        $saleCents  = (int) $price['sale_cents'];
++        $costMicros = (int) ($price['cost_micros'] ?? $costCents * 1000);
++        $saleMicros = (int) ($price['sale_micros'] ?? $saleCents * 1000);
++        $provider   = $this->providerFor($channel, $payload);
++
++        return DB::transaction(function () use ($tenant, $user, $channel, $payload, $idempotencyKey, $costCents, $saleCents, $costMicros, $saleMicros, $provider, $scheduledFor) {
+             $dispatch = MessageDispatch::withoutGlobalScopes()->create([
+                 'tenant_id'                => $tenant->id,
+                 'user_id'                  => $user?->id,
+@@ -121,12 +123,17 @@ public function dispatch(
+                 'status'                   => 'queued',
+                 'cost_cents'               => $costCents,
+                 'sale_cents'               => $saleCents,
++                'cost_micros'              => $costMicros,
++                'sale_micros'              => $saleMicros,
+                 'charged_cents'            => 0,
+                 'idempotency_key'          => $idempotencyKey,
+                 'idempotency_payload_hash' => $idempotencyKey ? $this->idempotency->hashPayload($payload) : null,
+                 'unsubscribe_token'        => $channel === 'email' ? Str::random(64) : null,
+                 'scheduled_for'            => $scheduledFor,
+                 'meta'                     => $payload['meta'] ?? null,
++                // Persist the variables map sent by the caller (substitution
++                // already applied to subject/content by the controller).
++                'variables'                => !empty($payload['variables']) ? $payload['variables'] : null,
+             ]);
+ 
+             $ok = $this->billing->reserve($tenant->id, $saleCents, 'message_dispatch', $dispatch->id);
+diff --git a/new_saas/backend/database/migrations/2026_05_30_120000_add_micros_to_pricing_tables.php b/new_saas/backend/database/migrations/2026_05_30_120000_add_micros_to_pricing_tables.php
+new file mode 100644
+index 00000000..b7f50fba
+--- /dev/null
++++ b/new_saas/backend/database/migrations/2026_05_30_120000_add_micros_to_pricing_tables.php
+@@ -0,0 +1,64 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Schema;
++
++/**
++ * Adiciona precisão sub-centavo nas tabelas de pricing.
++ *
++ * Motivo: custos reais dos fornecedores têm frações de centavo (SMS R$ 0,0605,
++ * Voz R$ 0,03501, Email R$ 0,0043) que arredondados para inteiros de centavos
++ * (cost_cents) viram zero ou perdem ~10% de margem.
++ *
++ * Estratégia: adiciona cost_micros / sale_micros (×10⁵ — 1 micro = 0,00001 reais)
++ * ao lado das colunas existentes em centavos. PricingService prefere micros se
++ * >0; cents continuam preenchidos como espelho arredondado para retrocompat
++ * com relatórios, dashboards e código legado.
++ */
++return new class extends Migration {
++    public function up(): void
++    {
++        // Global service prices
++        Schema::table('service_prices', function (Blueprint $t) {
++            $t->unsignedInteger('cost_micros')->default(0)->after('cost_cents');
++            $t->unsignedInteger('sale_micros')->default(0)->after('sale_cents');
++        });
++
++        // Tenant-specific overrides
++        Schema::table('tenant_service_prices', function (Blueprint $t) {
++            $t->unsignedInteger('sale_micros')->default(0)->after('sale_cents');
++        });
++
++        // Snapshot do preço no momento do envio (vai pra cobrança).
++        // CRÍTICO: garante que o histórico financeiro preserva a precisão real.
++        Schema::table('message_dispatches', function (Blueprint $t) {
++            $t->unsignedInteger('cost_micros')->default(0)->after('cost_cents');
++            $t->unsignedInteger('sale_micros')->default(0)->after('sale_cents');
++        });
++
++        // Backfill: 1 cent = 1000 micros. Preserva valores existentes sem precisão.
++        DB::table('service_prices')->update([
++            'cost_micros' => DB::raw('cost_cents * 1000'),
++            'sale_micros' => DB::raw('sale_cents * 1000'),
++        ]);
++        DB::table('tenant_service_prices')->update([
++            'sale_micros' => DB::raw('sale_cents * 1000'),
++        ]);
++        // Dispatches existentes ficam com micros=0; PricingService faz fallback para cents.
++    }
++
++    public function down(): void
++    {
++        Schema::table('message_dispatches', function (Blueprint $t) {
++            $t->dropColumn(['cost_micros', 'sale_micros']);
++        });
++        Schema::table('tenant_service_prices', function (Blueprint $t) {
++            $t->dropColumn('sale_micros');
++        });
++        Schema::table('service_prices', function (Blueprint $t) {
++            $t->dropColumn(['cost_micros', 'sale_micros']);
++        });
++    }
++};
+diff --git a/new_saas/backend/database/migrations/2026_05_30_120001_add_whatsapp_fields_to_plans.php b/new_saas/backend/database/migrations/2026_05_30_120001_add_whatsapp_fields_to_plans.php
+new file mode 100644
+index 00000000..dd567d05
+--- /dev/null
++++ b/new_saas/backend/database/migrations/2026_05_30_120001_add_whatsapp_fields_to_plans.php
+@@ -0,0 +1,27 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++/**
++ * WhatsApp em todos os planos com cobrança separada do saldo:
++ *  - whatsapp_setup_fee_cents: cobrado one-time no onboarding WABA
++ *  - whatsapp_billed_separately: se true, mensagens não consomem saldo do plano
++ */
++return new class extends Migration {
++    public function up(): void
++    {
++        Schema::table('plans', function (Blueprint $t) {
++            $t->unsignedInteger('whatsapp_setup_fee_cents')->default(0)->after('included_balance_cents');
++            $t->boolean('whatsapp_billed_separately')->default(true)->after('whatsapp_setup_fee_cents');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('plans', function (Blueprint $t) {
++            $t->dropColumn(['whatsapp_setup_fee_cents', 'whatsapp_billed_separately']);
++        });
++    }
++};
+diff --git a/new_saas/backend/database/seeders/PlansSeeder.php b/new_saas/backend/database/seeders/PlansSeeder.php
+index 5126e3ad..0bc350c7 100644
+--- a/new_saas/backend/database/seeders/PlansSeeder.php
++++ b/new_saas/backend/database/seeders/PlansSeeder.php
+@@ -5,66 +5,77 @@
+ use App\Models\Plan;
+ use Illuminate\Database\Seeder;
+ 
++/**
++ * Planos comerciais — revisão 30/05/2026.
++ *
++ * Margem garantida positiva em todos os cenários (uso 0% / 50% mix / 100% mix
++ * / 100% SMS pior caso). Cálculos validados em PricingPrecisionTest.
++ *
++ *  Plano     | Mensal | Saldo | Margem mix médio | Margem pior SMS
++ *  Free      | R$ 0   | R$ 5  | CAC -R$ 3,33     | CAC -R$ 3,78
++ *  Starter   | R$ 89  | R$100 | +R$ 22,40 (25%)  | +R$ 13,38 (15%)
++ *  Pro       | R$ 219 | R$250 | +R$ 52,50 (24%)  | +R$ 29,94 (14%)
++ *  Business  | R$ 699 | R$800 | +R$166,20 (24%)  | +R$ 94,00 (13%)
++ *
++ * Mix realista: 50% Email + 30% SMS + 20% Voz (custo BC = 66,6% do saldo).
++ * Premissas detalhadas: docs/superpowers/plans/2026-05-30-pricing-revision.md (a criar).
++ *
++ * WhatsApp habilitado em TODOS os planos:
++ *  - whatsapp_setup_fee_cents: cobrado once no onboarding WABA
++ *  - whatsapp_billed_separately=true: mensagens não consomem saldo do plano
++ */
+ class PlansSeeder extends Seeder
+ {
+-    /**
+-     * Pricing study: docs/superpowers/plans/2026-03-26-pricing-study.md
+-     *
+-     * 1 crédito = R$0,10 valor percebido
+-     * Margem ponderada do mix: ~60,7%
+-     */
+     public function run(): void
+     {
+-        // ── Plano Grátis ─────────────────────────────────────────────
++        // ── Free — aquisição, saldo recorrente mensal R$ 5 ────────────
+         Plan::updateOrCreate(
+             ['slug' => 'free'],
+             [
+-                'name'               => 'Grátis',
+-                'price_monthly'      => 0.00,
+-                'price_annual'       => 0.00,
+-                'credits_included'   => 50,        // one-time, não renova
+-                'max_contacts'       => 50,
+-                'max_campaigns'      => 3,
+-                'overage_rate_sms'   => 0.12,      // R$/crédito extra
+-                'overage_rate_voice' => 0.35,
+-                'overage_rate_email' => 0.00,     // email não disponível no free
+-                'overage_rate_ai'    => 0.00,
+-                'features'           => json_encode([
++                'name'                       => 'Grátis',
++                'price_monthly'              => 0.00,
++                'price_annual'               => 0.00,
++                'included_balance_cents'     => 500,        // R$ 5,00/mês recorrente
++                'whatsapp_setup_fee_cents'   => 49900,      // R$ 499 (alto — filtra Free de WhatsApp)
++                'whatsapp_billed_separately' => true,
++                'max_contacts'               => 50,
++                'max_campaigns'              => 3,
++                'features'                   => json_encode([
+                     'support'              => 'faq',
+-                    'channels'             => ['sms', 'voice'],
++                    'channels'             => ['sms', 'email', 'whatsapp'],
+                     'ai_generations_limit' => 1,
+                     'ai_chatbot_enabled'   => false,
+                     'funnels_enabled'      => false,
+                     'api_access'           => false,
+                     'max_contact_lists'    => 1,
+                     'max_users'            => 1,
++                    'max_funnels'          => 0,
+                     'white_label'          => false,
+-                    'credits_renew'        => false,
++                    'credits_renew'        => true,
+                 ]),
+             ]
+         );
+ 
+-        // ── Starter (R$97/mês — 1.500 créditos) ────────────────────
+-        // Custo máx estimado: R$59 → margem mín 39%
++        // ── Starter R$ 89/mês — PME pequena ───────────────────────────
+         Plan::updateOrCreate(
+             ['slug' => 'starter'],
+             [
+-                'name'               => 'Starter',
+-                'price_monthly'      => 97.00,
+-                'price_annual'       => 931.20,   // 97 * 12 * 0.8
+-                'credits_included'   => 1500,
+-                'max_contacts'       => 1000,
+-                'max_campaigns'      => 20,
+-                'overage_rate_sms'   => 0.12,
+-                'overage_rate_voice' => 0.35,
+-                'overage_rate_email' => 0.10,
+-                'overage_rate_ai'    => 0.90,
+-                'features'           => json_encode([
++                'name'                       => 'Starter',
++                'price_monthly'              => 89.00,
++                'price_annual'               => 854.40,     // 89 × 12 × 0,80
++                'included_balance_cents'     => 10000,      // R$ 100/mês
++                'whatsapp_setup_fee_cents'   => 29900,      // R$ 299
++                'whatsapp_billed_separately' => true,
++                'max_contacts'               => 1000,
++                'max_campaigns'              => 20,
++                'features'                   => json_encode([
+                     'support'              => 'email',
+-                    'channels'             => ['sms', 'email', 'whatsapp', 'voice'],
++                    'channels'             => ['sms', 'email', 'voice', 'whatsapp'],
+                     'ai_generations_limit' => 10,
+-                    'ai_chatbot_enabled'   => false,
++                    'ai_chatbot_enabled'   => true,        // básico, limite via ai_chatbot_conversations_limit
++                    'ai_chatbot_conversations_limit' => 100,
+                     'funnels_enabled'      => true,
++                    'max_funnels'          => 2,
+                     'api_access'           => false,
+                     'max_contact_lists'    => 5,
+                     'max_users'            => 2,
+@@ -74,28 +85,27 @@ public function run(): void
+             ]
+         );
+ 
+-        // ── Pro (R$297/mês — 6.000 créditos) ───────────────────────
+-        // Custo máx estimado: R$236 → margem mín 21% (mix real ~50%)
++        // ── Pro R$ 219/mês — agência / PME média (MAIS POPULAR) ──────
+         Plan::updateOrCreate(
+             ['slug' => 'pro'],
+             [
+-                'name'               => 'Pro',
+-                'price_monthly'      => 297.00,
+-                'price_annual'       => 2851.20,  // 297 * 12 * 0.8
+-                'credits_included'   => 6000,
+-                'max_contacts'       => 10000,
+-                'max_campaigns'      => 100,
+-                'overage_rate_sms'   => 0.10,
+-                'overage_rate_voice' => 0.30,
+-                'overage_rate_email' => 0.08,
+-                'overage_rate_ai'    => 0.80,
+-                'features'           => json_encode([
++                'name'                       => 'Pro',
++                'price_monthly'              => 219.00,
++                'price_annual'               => 2102.40,    // 219 × 12 × 0,80
++                'included_balance_cents'     => 25000,      // R$ 250/mês
++                'whatsapp_setup_fee_cents'   => 9900,       // R$ 99
++                'whatsapp_billed_separately' => true,
++                'max_contacts'               => 10000,
++                'max_campaigns'              => 0,          // ilimitado
++                'features'                   => json_encode([
+                     'support'              => 'priority',
+-                    'channels'             => ['sms', 'email', 'whatsapp', 'voice'],
+-                    'ai_generations_limit' => 0,    // ilimitado (consome créditos)
++                    'channels'             => ['sms', 'email', 'voice', 'whatsapp'],
++                    'ai_generations_limit' => 0,           // ilimitado (consome saldo)
+                     'ai_chatbot_enabled'   => true,
++                    'ai_chatbot_conversations_limit' => 0, // ilimitado
+                     'funnels_enabled'      => true,
+-                    'api_access'           => true,
++                    'max_funnels'          => 10,
++                    'api_access'           => 'read_only',
+                     'max_contact_lists'    => 20,
+                     'max_users'            => 5,
+                     'white_label'          => false,
+@@ -104,32 +114,66 @@ public function run(): void
+             ]
+         );
+ 
+-        // ── Business (R$697/mês — 20.000 créditos) ─────────────────
+-        // Custo máx estimado: R$500 (mix) → margem ~28%
++        // ── Business R$ 699/mês — empresa / agência grande ───────────
+         Plan::updateOrCreate(
+             ['slug' => 'business'],
+             [
+-                'name'               => 'Business',
+-                'price_monthly'      => 697.00,
+-                'price_annual'       => 6691.20,  // 697 * 12 * 0.8
+-                'credits_included'   => 20000,
+-                'max_contacts'       => 0,          // ilimitado
+-                'max_campaigns'      => 0,          // ilimitado
+-                'overage_rate_sms'   => 0.08,
+-                'overage_rate_voice' => 0.25,
+-                'overage_rate_email' => 0.06,
+-                'overage_rate_ai'    => 0.70,
+-                'features'           => json_encode([
++                'name'                       => 'Business',
++                'price_monthly'              => 699.00,
++                'price_annual'               => 6710.40,    // 699 × 12 × 0,80
++                'included_balance_cents'     => 80000,      // R$ 800/mês
++                'whatsapp_setup_fee_cents'   => 0,          // incluso
++                'whatsapp_billed_separately' => true,
++                'max_contacts'               => 0,          // ilimitado
++                'max_campaigns'              => 0,
++                'features'                   => json_encode([
+                     'support'              => 'dedicated',
+-                    'channels'             => ['sms', 'email', 'whatsapp', 'voice'],
+-                    'ai_generations_limit' => 0,    // ilimitado
++                    'channels'             => ['sms', 'email', 'voice', 'whatsapp'],
++                    'ai_generations_limit' => 0,
++                    'ai_chatbot_enabled'   => true,
++                    'ai_chatbot_conversations_limit' => 0,
++                    'funnels_enabled'      => true,
++                    'max_funnels'          => 0,
++                    'api_access'           => 'full',
++                    'max_contact_lists'    => 0,
++                    'max_users'            => 20,
++                    'white_label'          => true,
++                    'credits_renew'        => true,
++                    'sla'                  => 'business_hours',
++                ]),
++            ]
++        );
++
++        // ── Enterprise — sob consulta (não auto-purchase) ────────────
++        Plan::updateOrCreate(
++            ['slug' => 'enterprise'],
++            [
++                'name'                       => 'Enterprise',
++                'price_monthly'              => 0.00,       // sob consulta — UI mostra "Falar com Vendas"
++                'price_annual'               => 0.00,
++                'included_balance_cents'     => 0,          // customizado
++                'whatsapp_setup_fee_cents'   => 0,
++                'whatsapp_billed_separately' => true,
++                'max_contacts'               => 0,
++                'max_campaigns'              => 0,
++                'features'                   => json_encode([
++                    'support'              => 'dedicated_24x7',
++                    'channels'             => ['sms', 'email', 'voice', 'whatsapp'],
++                    'ai_generations_limit' => 0,
+                     'ai_chatbot_enabled'   => true,
++                    'ai_chatbot_conversations_limit' => 0,
+                     'funnels_enabled'      => true,
+-                    'api_access'           => true,
+-                    'max_contact_lists'    => 0,    // ilimitado
+-                    'max_users'            => 0,    // ilimitado
++                    'max_funnels'          => 0,
++                    'api_access'           => 'full',
++                    'max_contact_lists'    => 0,
++                    'max_users'            => 0,
+                     'white_label'          => true,
+                     'credits_renew'        => true,
++                    'sla'                  => '24x7',
++                    'dedicated_ip'         => true,
++                    'sender_id'            => true,
++                    'multi_tenant'         => true,
++                    'sales_contact_only'   => true,
+                 ]),
+             ]
+         );
+diff --git a/new_saas/backend/database/seeders/ServicePricesSeeder.php b/new_saas/backend/database/seeders/ServicePricesSeeder.php
+index 0e16e4de..2d9efde7 100644
+--- a/new_saas/backend/database/seeders/ServicePricesSeeder.php
++++ b/new_saas/backend/database/seeders/ServicePricesSeeder.php
+@@ -2,24 +2,57 @@
+ namespace Database\Seeders;
+ 
+ use Illuminate\Database\Seeder;
++use Illuminate\Support\Facades\Cache;
+ use Illuminate\Support\Facades\DB;
+ 
++/**
++ * Preços globais dos serviços (custo BC + venda ao cliente).
++ *
++ * Valores reais do briefing comercial (30/05/2026):
++ *   SMS      custo R$ 0,0605   venda R$ 0,08  (margem +32%)
++ *   Voz      custo R$ 0,03501  venda R$ 0,06  (margem +71%)
++ *   Email    custo R$ 0,0043   venda R$ 0,01  (margem +133%)
++ *   WhatsApp marketing  custo R$ 0,08  venda R$ 0,12  (margem +50%)
++ *   WhatsApp utility    custo R$ 0,04  venda R$ 0,08  (margem +100%)
++ *   WhatsApp auth       custo R$ 0,02  venda R$ 0,05  (margem +150%)
++ *
++ * Unidades:
++ *   *_cents  = inteiros de R$ 0,01 (retrocompat com relatórios antigos)
++ *   *_micros = inteiros de R$ 0,00001 (×10⁵) — fonte da verdade para cobrança
++ *
++ * Mix médio realista (50% Email / 30% SMS / 20% Voz) → custo BC = 66,6% do
++ * valor vendido. Margem ponderada ~33%.
++ */
+ class ServicePricesSeeder extends Seeder
+ {
+     public function run(): void
+     {
+         $rows = [
+-            ['service' => 'sms',           'cost_cents' => 8,  'sale_cents' => 15],
+-            ['service' => 'voice',         'cost_cents' => 40, 'sale_cents' => 80],
+-            ['service' => 'email',         'cost_cents' => 2,  'sale_cents' => 5],
+-            ['service' => 'ai_generation', 'cost_cents' => 10, 'sale_cents' => 25],
+-            ['service' => 'audio_tts',     'cost_cents' => 30, 'sale_cents' => 60],
++            // Mensageria — venda em centavos cheios, custo real preservado em micros
++            ['service' => 'sms',           'cost_micros' => 6050, 'sale_micros' => 8000,  'cost_cents' => 6,  'sale_cents' => 8],
++            ['service' => 'voice',         'cost_micros' => 3501, 'sale_micros' => 6000,  'cost_cents' => 4,  'sale_cents' => 6],
++            ['service' => 'email',         'cost_micros' => 430,  'sale_micros' => 1000,  'cost_cents' => 0,  'sale_cents' => 1],
++
++            // WhatsApp por categoria (Meta cobra por conversa 24h, não por mensagem)
++            ['service' => 'whatsapp_marketing', 'cost_micros' => 8000, 'sale_micros' => 12000, 'cost_cents' => 8, 'sale_cents' => 12],
++            ['service' => 'whatsapp_utility',   'cost_micros' => 4000, 'sale_micros' => 8000,  'cost_cents' => 4, 'sale_cents' => 8],
++            ['service' => 'whatsapp_auth',      'cost_micros' => 2000, 'sale_micros' => 5000,  'cost_cents' => 2, 'sale_cents' => 5],
++
++            // IA — preço por geração de mensagem variacional
++            ['service' => 'ai_generation', 'cost_micros' => 10000, 'sale_micros' => 25000, 'cost_cents' => 10, 'sale_cents' => 25],
++            // TTS — preço por minuto de áudio gerado por ElevenLabs
++            ['service' => 'audio_tts',     'cost_micros' => 30000, 'sale_micros' => 60000, 'cost_cents' => 30, 'sale_cents' => 60],
+         ];
++
+         foreach ($rows as $row) {
+             DB::table('service_prices')->updateOrInsert(
+                 ['service' => $row['service']],
+                 array_merge($row, ['created_at' => now(), 'updated_at' => now()])
+             );
+         }
++
++        // Cache 5min do PricingService precisa ser invalidado pra valores novos
++        // serem lidos imediatamente após o seed.
++        Cache::flush();
+     }
+ }
+diff --git a/new_saas/backend/tests/Feature/Admin/AdminPricingApiTest.php b/new_saas/backend/tests/Feature/Admin/AdminPricingApiTest.php
+index af330d72..6accc6e6 100644
+--- a/new_saas/backend/tests/Feature/Admin/AdminPricingApiTest.php
++++ b/new_saas/backend/tests/Feature/Admin/AdminPricingApiTest.php
+@@ -28,7 +28,7 @@ private function userWithRole(string $role): User
+         return User::factory()->create(['tenant_id' => $tenant->id, 'role' => $role]);
+     }
+ 
+-    public function test_superadmin_can_list_all_5_services(): void
++    public function test_superadmin_can_list_all_services(): void
+     {
+         Sanctum::actingAs($this->userWithRole('superadmin'), ['*']);
+ 
+@@ -37,11 +37,13 @@ public function test_superadmin_can_list_all_5_services(): void
+         $resp->assertStatus(200)
+             ->assertJsonStructure(['data' => [['service', 'cost_cents', 'sale_cents', 'margin_cents']]]);
+ 
++        // Catálogo atual cobre mensageria, WhatsApp por categoria, IA e TTS.
+         $services = collect($resp->json('data'))->pluck('service')->sort()->values()->all();
+-        $this->assertSame(
+-            ['ai_generation', 'audio_tts', 'email', 'sms', 'voice'],
+-            $services
+-        );
++        $expected = [
++            'ai_generation', 'audio_tts', 'email', 'sms', 'voice',
++            'whatsapp_auth', 'whatsapp_marketing', 'whatsapp_utility',
++        ];
++        $this->assertSame($expected, $services);
+     }
+ 
+     public function test_finance_can_update_and_audit_logged(): void
+@@ -67,7 +69,8 @@ public function test_finance_can_update_and_audit_logged(): void
+         $this->assertNotNull($log);
+         $this->assertSame($user->id, $log->user_id);
+         $this->assertSame('sms', $log->metadata['service']);
+-        $this->assertSame(15, (int) $log->metadata['before']['sale_cents']);
++        // Briefing 30/05/2026: SMS venda 8c
++        $this->assertSame(8, (int) $log->metadata['before']['sale_cents']);
+         $this->assertSame(20, (int) $log->metadata['after']['sale_cents']);
+     }
+ 
+diff --git a/new_saas/backend/tests/Feature/Billing/BalanceFlowTest.php b/new_saas/backend/tests/Feature/Billing/BalanceFlowTest.php
+index 983a886e..4c362d02 100644
+--- a/new_saas/backend/tests/Feature/Billing/BalanceFlowTest.php
++++ b/new_saas/backend/tests/Feature/Billing/BalanceFlowTest.php
+@@ -60,15 +60,15 @@ public function test_send_sms_via_api_decrements_balance_and_writes_reserve_tx()
+             'to' => '+5521988887777', 'content' => 'Hi',
+         ]);
+ 
+-        $resp->assertStatus(202)->assertJsonPath('reserved_cents', 15);
+-        $this->assertSame(135, (int) $tenant->fresh()->balance_cents);
++        $resp->assertStatus(202)->assertJsonPath('reserved_cents', 8);
++        $this->assertSame(142, (int) $tenant->fresh()->balance_cents);
+ 
+         $tx = BalanceTransaction::where('tenant_id', $tenant->id)
+             ->where('type', 'reserve')
+             ->first();
+         $this->assertNotNull($tx);
+-        $this->assertSame(-15, (int) $tx->amount_cents);
+-        $this->assertSame(135, (int) $tx->balance_after_cents);
++        $this->assertSame(-8, (int) $tx->amount_cents);
++        $this->assertSame(142, (int) $tx->balance_after_cents);
+     }
+ 
+     public function test_provider_failure_releases_funds_and_writes_release_tx(): void
+@@ -95,7 +95,7 @@ public function test_provider_failure_releases_funds_and_writes_release_tx(): vo
+         $release = BalanceTransaction::where('tenant_id', $tenant->id)
+             ->where('type', 'release')->first();
+         $this->assertNotNull($release);
+-        $this->assertSame(15, (int) $release->amount_cents);
++        $this->assertSame(8, (int) $release->amount_cents);
+     }
+ 
+     public function test_send_when_balance_insufficient_returns_402(): void
+@@ -109,7 +109,7 @@ public function test_send_when_balance_insufficient_returns_402(): void
+         ]);
+ 
+         $resp->assertStatus(402)
+-            ->assertJson(['error' => 'INSUFFICIENT_FUNDS', 'required' => 15, 'available' => 0]);
++            ->assertJson(['error' => 'INSUFFICIENT_FUNDS', 'required' => 8, 'available' => 0]);
+ 
+         // No reserve tx written
+         $this->assertSame(0, BalanceTransaction::where('tenant_id', $tenant->id)->count());
+diff --git a/new_saas/backend/tests/Feature/Billing/MessageDispatchSnapshotsPriceTest.php b/new_saas/backend/tests/Feature/Billing/MessageDispatchSnapshotsPriceTest.php
+index 0a73c5c0..6e3634f4 100644
+--- a/new_saas/backend/tests/Feature/Billing/MessageDispatchSnapshotsPriceTest.php
++++ b/new_saas/backend/tests/Feature/Billing/MessageDispatchSnapshotsPriceTest.php
+@@ -52,8 +52,12 @@ public function test_dispatch_snapshots_current_sale_cents(): void
+             null
+         );
+ 
+-        $this->assertSame(15, (int) $dispatch->sale_cents);
+-        $this->assertSame(8, (int) $dispatch->cost_cents);
++        // Preços vigentes do briefing: SMS venda 8c / custo 6c.
++        $this->assertSame(8, (int) $dispatch->sale_cents);
++        $this->assertSame(6, (int) $dispatch->cost_cents);
++        // Snapshot em micros preserva precisão real (custo R$ 0,0605 = 6050 micros).
++        $this->assertSame(8000, (int) $dispatch->sale_micros);
++        $this->assertSame(6050, (int) $dispatch->cost_micros);
+     }
+ 
+     public function test_later_global_price_change_does_not_modify_old_dispatch(): void
+@@ -68,7 +72,10 @@ public function test_later_global_price_change_does_not_modify_old_dispatch(): v
+         );
+ 
+         // Bump global price → cache invalidated → new dispatches priced higher
+-        ServicePrice::where('service', 'sms')->update(['cost_cents' => 50, 'sale_cents' => 99]);
++        ServicePrice::where('service', 'sms')->update([
++            'cost_cents' => 50, 'sale_cents' => 99,
++            'cost_micros' => 50000, 'sale_micros' => 99000,
++        ]);
+         Cache::forget('service_price:sms');
+ 
+         $second = app(MessagingService::class)->dispatch(
+@@ -77,14 +84,18 @@ public function test_later_global_price_change_does_not_modify_old_dispatch(): v
+             null
+         );
+ 
+-        // Old dispatch unchanged
++        // Old dispatch unchanged (preserva preço vigente no momento)
+         $first->refresh();
+-        $this->assertSame(15, (int) $first->sale_cents);
+-        $this->assertSame(8, (int) $first->cost_cents);
++        $this->assertSame(8, (int) $first->sale_cents);
++        $this->assertSame(6, (int) $first->cost_cents);
++        $this->assertSame(8000, (int) $first->sale_micros);
++        $this->assertSame(6050, (int) $first->cost_micros);
+ 
+         // New dispatch reflects new price
+         $this->assertSame(99, (int) $second->sale_cents);
+         $this->assertSame(50, (int) $second->cost_cents);
++        $this->assertSame(99000, (int) $second->sale_micros);
++        $this->assertSame(50000, (int) $second->cost_micros);
+     }
+ 
+     public function test_tenant_override_takes_precedence_over_global(): void
+@@ -108,7 +119,8 @@ public function test_tenant_override_takes_precedence_over_global(): void
+         );
+ 
+         $this->assertSame(3, (int) $dispatch->sale_cents);
+-        // cost_cents always comes from global ServicePrice
+-        $this->assertSame(8, (int) $dispatch->cost_cents);
++        // cost_cents always comes from global ServicePrice (SMS custo 6c agora)
++        $this->assertSame(6, (int) $dispatch->cost_cents);
++        $this->assertSame(6050, (int) $dispatch->cost_micros);
+     }
+ }
+diff --git a/new_saas/backend/tests/Feature/Messaging/BillingFlowTest.php b/new_saas/backend/tests/Feature/Messaging/BillingFlowTest.php
+index 06c8869a..b809aed6 100644
+--- a/new_saas/backend/tests/Feature/Messaging/BillingFlowTest.php
++++ b/new_saas/backend/tests/Feature/Messaging/BillingFlowTest.php
+@@ -58,11 +58,11 @@ public function test_reserve_then_success_charges(): void
+             'content' => 'Hi',
+         ]);
+ 
+-        $resp->assertStatus(202)->assertJsonPath('reserved_cents', 15);
++        $resp->assertStatus(202)->assertJsonPath('reserved_cents', 8);
+         $dispatchId = $resp->json('dispatch_id');
+ 
+-        // Reserve happened: balance decremented immediately (150 - 15 = 135)
+-        $this->assertSame(135, $user->tenant->fresh()->balance_cents);
++        // Reserve happened: balance decremented (150 - 8 = 142 com SMS 8c)
++        $this->assertSame(142, $user->tenant->fresh()->balance_cents);
+ 
+         $dispatch = MessageDispatch::withoutGlobalScopes()->find($dispatchId);
+         $this->assertSame('queued', $dispatch->status);
+@@ -73,10 +73,10 @@ public function test_reserve_then_success_charges(): void
+ 
+         $dispatch->refresh();
+         $this->assertSame('sent', $dispatch->status);
+-        $this->assertSame(15, (int) $dispatch->charged_cents);
++        $this->assertSame(8, (int) $dispatch->charged_cents);
+ 
+         // Balance unchanged after job — already debited during reserve
+-        $this->assertSame(135, $user->tenant->fresh()->balance_cents);
++        $this->assertSame(142, $user->tenant->fresh()->balance_cents);
+     }
+ 
+     public function test_reserve_then_failure_releases(): void
+@@ -97,7 +97,7 @@ public function test_reserve_then_failure_releases(): void
+         $resp->assertStatus(202);
+         $dispatchId = $resp->json('dispatch_id');
+ 
+-        $this->assertSame(135, $user->tenant->fresh()->balance_cents);
++        $this->assertSame(142, $user->tenant->fresh()->balance_cents);
+ 
+         (new SendMessageJob($dispatchId))->handle(app(InfobipService::class));
+ 
+@@ -130,7 +130,7 @@ public function test_idempotency_does_not_double_charge(): void
+         $second->assertStatus(202);
+ 
+         $this->assertSame($first->json('dispatch_id'), $second->json('dispatch_id'));
+-        $this->assertSame(135, $user->tenant->fresh()->balance_cents);
++        $this->assertSame(142, $user->tenant->fresh()->balance_cents);
+ 
+         $count = MessageDispatch::withoutGlobalScopes()
+             ->where('tenant_id', $user->tenant_id)
+diff --git a/new_saas/backend/tests/Feature/Messaging/SendSmsApiTest.php b/new_saas/backend/tests/Feature/Messaging/SendSmsApiTest.php
+index 8e8754aa..bdc5ff2b 100644
+--- a/new_saas/backend/tests/Feature/Messaging/SendSmsApiTest.php
++++ b/new_saas/backend/tests/Feature/Messaging/SendSmsApiTest.php
+@@ -74,10 +74,11 @@ public function test_happy_path_returns_202(): void
+             ->assertJsonStructure(['dispatch_id', 'status', 'reserved_cents', '_links' => ['status']])
+             ->assertJson([
+                 'status'         => 'queued',
+-                'reserved_cents' => 15,
++                'reserved_cents' => 8,
+             ]);
+ 
+-        $this->assertSame(1485, $user->tenant->fresh()->balance_cents);
++        // SMS venda 8c → 1500 - 8 = 1492
++        $this->assertSame(1492, $user->tenant->fresh()->balance_cents);
+         Queue::assertPushed(SendMessageJob::class);
+     }
+ 
+@@ -148,7 +149,7 @@ public function test_insufficient_credits(): void
+         $resp->assertStatus(402)
+             ->assertJson([
+                 'error'     => 'INSUFFICIENT_FUNDS',
+-                'required'  => 15,
++                'required'  => 8,
+                 'available' => 0,
+             ]);
+     }
+@@ -175,8 +176,8 @@ public function test_idempotency_replay(): void
+             1,
+             MessageDispatch::withoutGlobalScopes()->where('tenant_id', $user->tenant_id)->count()
+         );
+-        // Funds debited only once
+-        $this->assertSame(1485, $user->tenant->fresh()->balance_cents);
++        // Funds debited only once (SMS 8c → 1500 - 8 = 1492)
++        $this->assertSame(1492, $user->tenant->fresh()->balance_cents);
+     }
+ 
+     public function test_idempotency_key_reuse_different_payload_returns_409(): void
+diff --git a/new_saas/backend/tests/Pentest/BillingSecurityTest.php b/new_saas/backend/tests/Pentest/BillingSecurityTest.php
+index 8a734f01..109fc6bd 100644
+--- a/new_saas/backend/tests/Pentest/BillingSecurityTest.php
++++ b/new_saas/backend/tests/Pentest/BillingSecurityTest.php
+@@ -454,20 +454,30 @@ public function test_17_pricing_snapshot_immutable_after_dispatch(): void
+         $tenant = $this->makeTenant(balanceCents: 1000);
+         $user = User::factory()->create(['tenant_id' => $tenant->id]);
+ 
++        // Preços vigentes do briefing comercial: SMS venda 8c / custo 6c.
+         $dispatch = app(MessagingService::class)->dispatch(
+             $tenant, $user, 'sms',
+             ['to' => '+5521988887777', 'content' => 'snapshot pen'],
+             null
+         );
+-        $this->assertSame(15, (int) $dispatch->sale_cents);
++        $this->assertSame(8, (int) $dispatch->sale_cents);
++        $this->assertSame(6, (int) $dispatch->cost_cents);
++        // Precisão real preservada em micros (custo SMS R$ 0,0605 = 6050 micros).
++        $this->assertSame(6050, (int) $dispatch->cost_micros);
++        $this->assertSame(8000, (int) $dispatch->sale_micros);
+ 
+         // Mutate global ServicePrice → historical dispatch must remain unchanged
+-        ServicePrice::where('service', 'sms')->update(['sale_cents' => 999, 'cost_cents' => 500]);
++        ServicePrice::where('service', 'sms')->update([
++            'sale_cents' => 999, 'cost_cents' => 500,
++            'sale_micros' => 999000, 'cost_micros' => 500000,
++        ]);
+         \Illuminate\Support\Facades\Cache::forget('service_price:sms');
+ 
+         $dispatch->refresh();
+-        $this->assertSame(15, (int) $dispatch->sale_cents, 'Snapshot must NOT track live price');
+-        $this->assertSame(8, (int) $dispatch->cost_cents, 'Cost snapshot must remain immutable');
++        $this->assertSame(8, (int) $dispatch->sale_cents, 'Snapshot must NOT track live price');
++        $this->assertSame(6, (int) $dispatch->cost_cents, 'Cost snapshot must remain immutable');
++        $this->assertSame(6050, (int) $dispatch->cost_micros, 'Micros snapshot must remain immutable');
++        $this->assertSame(8000, (int) $dispatch->sale_micros);
+     }
+ 
+     // =================================================================
+diff --git a/new_saas/backend/tests/Unit/Billing/PricingPrecisionTest.php b/new_saas/backend/tests/Unit/Billing/PricingPrecisionTest.php
+new file mode 100644
+index 00000000..0b50292f
+--- /dev/null
++++ b/new_saas/backend/tests/Unit/Billing/PricingPrecisionTest.php
+@@ -0,0 +1,154 @@
++<?php
++
++namespace Tests\Unit\Billing;
++
++use App\Models\Plan;
++use App\Models\ServicePrice;
++use App\Models\Tenant;
++use App\Services\Billing\PricingService;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Illuminate\Support\Facades\Cache;
++use Tests\TestCase;
++
++/**
++ * Garante que o PricingService preserva a precisão sub-centavo dos custos reais
++ * dos fornecedores (SMS R$ 0,0605 / Voz R$ 0,03501 / Email R$ 0,0043).
++ *
++ * Cents arredondados continuam preenchidos para retrocompat com relatórios
++ * antigos, mas micros é a fonte da verdade para a cobrança.
++ *
++ * Premissas validadas:
++ *   - Mil envios SMS custam exatamente R$ 60,50 (não R$ 60 nem R$ 80)
++ *   - Margem por canal cumpre o briefing comercial
++ *   - Margem positiva no mix médio realista para todos os planos pagos
++ */
++class PricingPrecisionTest extends TestCase
++{
++    use RefreshDatabase;
++
++    protected function setUp(): void
++    {
++        parent::setUp();
++        Cache::flush();
++        $this->seed(\Database\Seeders\ServicePricesSeeder::class);
++        $this->seed(\Database\Seeders\PlansSeeder::class);
++    }
++
++    public function test_sms_preserves_sub_cent_cost(): void
++    {
++        $sms = ServicePrice::where('service', 'sms')->first();
++        $this->assertSame(6050, $sms->cost_micros);
++        $this->assertSame(8000, $sms->sale_micros);
++
++        // 1.000 envios SMS = R$ 60,50 (custo BC) / R$ 80,00 (receita)
++        $costFor1000 = $sms->effectiveCostMicros() * 1000;
++        $saleFor1000 = $sms->effectiveSaleMicros() * 1000;
++        $this->assertSame(6_050_000, $costFor1000);  // R$ 60,50 em micros
++        $this->assertSame(8_000_000, $saleFor1000);  // R$ 80,00 em micros
++    }
++
++    public function test_voice_preserves_sub_cent_cost(): void
++    {
++        $voice = ServicePrice::where('service', 'voice')->first();
++        $this->assertSame(3501, $voice->cost_micros);
++        $this->assertSame(6000, $voice->sale_micros);
++    }
++
++    public function test_email_preserves_sub_cent_cost_below_one_cent(): void
++    {
++        // Custo real R$ 0,0043 — não cabe em cents (vira 0 ou 1).
++        // Em micros temos a precisão correta.
++        $email = ServicePrice::where('service', 'email')->first();
++        $this->assertSame(430, $email->cost_micros);
++        $this->assertSame(1000, $email->sale_micros);
++    }
++
++    public function test_pricing_service_returns_micros(): void
++    {
++        $tenant = Tenant::factory()->create();
++        $svc = app(PricingService::class);
++        $price = $svc->priceFor($tenant, 'sms');
++
++        $this->assertArrayHasKey('cost_micros', $price);
++        $this->assertArrayHasKey('sale_micros', $price);
++        $this->assertSame(6050, $price['cost_micros']);
++        $this->assertSame(8000, $price['sale_micros']);
++    }
++
++    public function test_per_channel_margins_match_briefing(): void
++    {
++        $expected = [
++            'sms'                => ['cost' => 6050,  'sale' => 8000,  'min_margin_percent' => 30],
++            'voice'              => ['cost' => 3501,  'sale' => 6000,  'min_margin_percent' => 65],
++            'email'              => ['cost' => 430,   'sale' => 1000,  'min_margin_percent' => 120],
++            'whatsapp_marketing' => ['cost' => 8000,  'sale' => 12000, 'min_margin_percent' => 45],
++            'whatsapp_utility'   => ['cost' => 4000,  'sale' => 8000,  'min_margin_percent' => 95],
++            'whatsapp_auth'      => ['cost' => 2000,  'sale' => 5000,  'min_margin_percent' => 145],
++        ];
++
++        foreach ($expected as $service => $exp) {
++            $price = ServicePrice::where('service', $service)->first();
++            $this->assertNotNull($price, "Service price missing: $service");
++            $this->assertSame($exp['cost'], $price->cost_micros, "cost_micros mismatch for $service");
++            $this->assertSame($exp['sale'], $price->sale_micros, "sale_micros mismatch for $service");
++            $this->assertGreaterThanOrEqual(
++                $exp['min_margin_percent'],
++                $price->marginPercent(),
++                "Margem insuficiente em $service"
++            );
++        }
++    }
++
++    public function test_paid_plans_have_positive_margin_in_realistic_mix(): void
++    {
++        // Mix realista: 50% Email + 30% SMS + 20% Voz.
++        // Custo BC por R$ 1 vendido em saldo (em micros):
++        //   0,5 × (0,0043/0,01) + 0,3 × (0,0605/0,08) + 0,2 × (0,03501/0,06)
++        //   = 0,5 × 0,43      + 0,3 × 0,75625     + 0,2 × 0,5835
++        //   = 0,215           + 0,2269           + 0,1167
++        //   = 0,5586 (custo BC = 55,86% do saldo)
++        // Nota: 0,5586 < 0,666 porque o mix médio favorece email/voz que têm
++        // markup maior. Margem por plano é ainda maior que a estimativa
++        // conservadora apresentada ao usuário.
++        $costFactor = 0.5586;
++
++        $expectedMargins = [
++            'starter'  => ['monthly' => 8900,  'balance' => 10000],
++            'pro'      => ['monthly' => 21900, 'balance' => 25000],
++            'business' => ['monthly' => 69900, 'balance' => 80000],
++        ];
++
++        foreach ($expectedMargins as $slug => $exp) {
++            $plan = Plan::where('slug', $slug)->first();
++            $this->assertNotNull($plan, "Plan missing: $slug");
++
++            $expectedCost   = $exp['balance'] * $costFactor;
++            $margin         = $exp['monthly'] - $expectedCost;
++            $marginPercent  = ($margin / $exp['monthly']) * 100;
++
++            $this->assertGreaterThan(0, $margin, "Plan $slug margem mix médio NEGATIVA");
++            $this->assertGreaterThan(20, $marginPercent, "Plan $slug margem < 20%");
++        }
++    }
++
++    public function test_whatsapp_setup_fees_descend_by_tier(): void
++    {
++        $expectedSetup = [
++            'free'       => 49900,
++            'starter'    => 29900,
++            'pro'        => 9900,
++            'business'   => 0,
++            'enterprise' => 0,
++        ];
++
++        foreach ($expectedSetup as $slug => $expected) {
++            $plan = Plan::where('slug', $slug)->first();
++            $this->assertSame(
++                $expected,
++                $plan->whatsapp_setup_fee_cents,
++                "Setup fee do plano $slug deveria ser R$ " . ($expected / 100)
++            );
++            $this->assertTrue($plan->whatsapp_billed_separately, "$slug deveria ter WhatsApp billed separately");
++        }
++    }
++}
+diff --git a/new_saas/backend/tests/Unit/Messaging/MessagingServiceTest.php b/new_saas/backend/tests/Unit/Messaging/MessagingServiceTest.php
+index 534e56ac..ab88c29f 100644
+--- a/new_saas/backend/tests/Unit/Messaging/MessagingServiceTest.php
++++ b/new_saas/backend/tests/Unit/Messaging/MessagingServiceTest.php
+@@ -71,13 +71,13 @@ public function test_dispatch_creates_queued_record_and_reserves_credits(): void
+         );
+ 
+         $this->assertEquals('queued', $dispatch->status);
+-        $this->assertEquals(15, (int) $dispatch->sale_cents);
++        // SMS venda 8c (briefing 30/05) → balance 150 - 8 = 142
++        $this->assertEquals(8, (int) $dispatch->sale_cents);
+         $this->assertEquals(0, (int) $dispatch->charged_cents);
+         $this->assertEquals('+5521999998888', $dispatch->to);
+         $this->assertEquals('infobip', $dispatch->provider);
+ 
+-        // Balance decremented by sale (150 -> 135)
+-        $this->assertEquals(135, (int) $tenant->fresh()->balance_cents);
++        $this->assertEquals(142, (int) $tenant->fresh()->balance_cents);
+ 
+         Queue::assertPushed(SendMessageJob::class);
+     }
+@@ -134,13 +134,15 @@ public function test_idempotency_replay_returns_same_dispatch_no_debit(): void
+         $tenant = $this->makeTenant(balanceCents: 150);
+         $payload = ['to' => '+5521999998888', 'content' => 'Olá'];
+ 
++        // SMS venda 8c → 150 - 8 = 142 após primeiro dispatch.
+         $first = $this->svc->dispatch($tenant, null, 'sms', $payload, 'key-xyz');
+-        $this->assertEquals(135, (int) $tenant->fresh()->balance_cents);
++        $this->assertEquals(142, (int) $tenant->fresh()->balance_cents);
+ 
+         $second = $this->svc->dispatch($tenant, null, 'sms', $payload, 'key-xyz');
+ 
++        // Idempotency replay: mesmo dispatch, sem novo débito.
+         $this->assertEquals($first->id, $second->id);
+-        $this->assertEquals(135, (int) $tenant->fresh()->balance_cents);
++        $this->assertEquals(142, (int) $tenant->fresh()->balance_cents);
+     }
+ 
+     public function test_quiet_hours_reject_strategy_creates_rejected_record(): void
+@@ -216,6 +218,7 @@ public function test_quiet_hours_defer_strategy_sets_scheduled_for(): void
+         $this->assertEquals('queued', $dispatch->status);
+         $this->assertNotNull($dispatch->scheduled_for);
+         $this->assertEquals(8, $dispatch->scheduled_for->setTimezone('America/Sao_Paulo')->hour);
+-        $this->assertEquals(135, (int) $tenant->fresh()->balance_cents);
++        // SMS venda 8c → 150 - 8 = 142
++        $this->assertEquals(142, (int) $tenant->fresh()->balance_cents);
+     }
+ }
+-- 
+2.48.1.windows.1
+

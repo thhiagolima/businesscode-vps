@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articleJsonLd, breadcrumbJsonLd } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('comparativos');
+  return entries.map((e) => ({ params: { concorrente: e.data.slug }, props: { e } }));
+}
+const { e } = Astro.props;
+const url = new URL(`/vs/${e.data.slug}`, Astro.site).href;
+const jsonLd = [
+  articleJsonLd({ title: e.data.title, description: e.data.description, url, datePublished: '2026-06-10', author: 'BusinessCode' }),
+  breadcrumbJsonLd([
+    { name: 'Comparativos', url: new URL('/vs', Astro.site).href },
+    { name: e.data.title, url },
+  ]),
+];
+---
+<BaseLayout title={`${e.data.title} — BusinessCode`} description={e.data.description} jsonLd={jsonLd}>
+  <article>
+    <h1>{e.data.title}</h1>
+    <p>{e.data.body}</p>
+  </article>
+</BaseLayout>

@@ -1,0 +1,15 @@
+[
+  {
+    "termo": "webhook",
+    "slug": "webhook",
+    "title": "O que é um Webhook em mensageria",
+    "description": "Definição de webhook e como ele entrega eventos de mensagens em tempo real.",
+    "body": "Um webhook é uma URL pública que recebe notificações HTTP automáticas quando um evento acontece — por exemplo, quando uma mensagem do WhatsApp é entregue, lida ou respondida pelo destinatário. Em vez de a sua aplicação ficar consultando a API repetidamente (polling), o provedor envia um HTTP POST para a sua URL no exato instante em que o evento ocorre, reduzindo latência e consumo de recursos. Na BusinessCode, webhooks são usados em dois fluxos principais: receber atualizações de status de mensagens enviadas (entregue, lida, falha, expirada) e receber mensagens de entrada dos seus clientes, habilitando chatbots e distribuição automática de atendimento. Para ativar, registre a URL no painel da BusinessCode, e configure um token secreto para validar a autenticidade de cada requisição recebida. Sua aplicação deve responder com HTTP 200 em menos de 3 segundos; respostas lentas ou com erro fazem o provedor reenviar o evento, por isso implemente idempotência usando o ID único de cada notificação para evitar processamento duplicado. Boas práticas adicionais incluem: processar o payload de forma assíncrona, registrar cada evento em log auditável e monitorar a fila de reentregas no painel.",
+    "uniqueFacts": [
+      "Entrega eventos via POST em tempo real, eliminando polling",
+      "Resposta em até 3 segundos evita reentregas automáticas",
+      "Idempotência com ID único previne processamento duplicado"
+    ],
+    "related": ["api"]
+  }
+]

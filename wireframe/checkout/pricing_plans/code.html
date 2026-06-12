@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing Plans | BusinessCode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#161a33",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-secondary-fixed-variant": "#004395",
+                        "error-container": "#93000a",
+                        "surface-tint": "#b3c5ff",
+                        "surface-bright": "#343752",
+                        "surface-dim": "#0d112a",
+                        "outline-variant": "#424656",
+                        "surface-container-high": "#242842",
+                        "surface": "#0d112a",
+                        "on-secondary-fixed": "#001a42",
+                        "surface-variant": "#2f334e",
+                        "surface-container-highest": "#2f334e",
+                        "secondary-container": "#0566d9",
+                        "tertiary-container": "#ca4101",
+                        "on-secondary": "#002e6a",
+                        "secondary": "#adc6ff",
+                        "on-primary-fixed": "#00174a",
+                        "inverse-on-surface": "#2b2f49",
+                        "on-primary-container": "#f5f5ff",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "on-error-container": "#ffdad6",
+                        "inverse-surface": "#dee0ff",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "on-surface-variant": "#c2c6d8",
+                        "on-background": "#dee0ff",
+                        "surface-container": "#1a1e37",
+                        "on-tertiary": "#5c1900",
+                        "on-secondary-container": "#e6ecff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container-lowest": "#080c25",
+                        "primary-container": "#0064ff",
+                        "inverse-primary": "#0054d8",
+                        "on-primary": "#002a76",
+                        "tertiary": "#ffb59c",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "on-primary-fixed-variant": "#003ea6",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-error": "#690005",
+                        "on-surface": "#dee0ff",
+                        "background": "#0d112a",
+                        "tertiary-fixed": "#ffdbd0",
+                        "outline": "#8c90a2",
+                        "primary": "#b3c5ff",
+                        "on-tertiary-container": "#fff4f0",
+                        "on-tertiary-fixed": "#390c00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #080c25; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .glass-card { background: rgba(22, 27, 69, 0.6); backdrop-filter: blur(12px); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="text-on-background antialiased overflow-x-hidden">
+<!-- TopNavBar (Shared Component Execution) -->
+<nav class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl flex justify-between items-center px-8 h-16 shadow-2xl shadow-blue-900/10">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-extrabold tracking-tighter text-white font-headline">BusinessCode</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-slate-400 font-medium hover:bg-white/5 transition-colors px-3 py-2 rounded-lg" href="#">Dashboard</a>
+<a class="text-white font-bold border-b-2 border-blue-500 px-3 py-2" href="#">Billing</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors" data-icon="settings">settings</span>
+<div class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden border border-white/10">
+<img alt="User profile" data-alt="close-up portrait of a professional modern creative worker with neutral background and soft cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu2UUgJuVHCgE36__9Xk5-nYYi2cp4qsJdCQvtBzxQmyzpAgy2Hq9zvjIiNntvkc7r0-m1_mb4AxUVjkcwSt-0lGmdu1UpcBZSBclG7dvFhxJVoBp3EWhvGFIJUK3YY5EWd2fliBopNxcy61429jy7sOCF5lN4e7QPYb9ETcRjN5MrCK-12dx6VBlc8U4spkHrELzezGWs3Kxr0jRpRfKHr4Y-iYzPdmgFJoLa0wQtdeMICFGiwD4dv8xYyAVkpIPTOfvXXI8hMeY"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Suppressed due to Transactional/Billing Focus Task) -->
+<main class="pt-32 pb-24 px-6 md:px-12 lg:px-24 min-h-screen">
+<!-- Hero Section -->
+<header class="max-w-4xl mx-auto text-center mb-16">
+<h1 class="text-display-lg text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-6 font-headline">
+                The Precision Plan for <span class="text-primary">Growth</span>
+</h1>
+<p class="text-on-surface-variant text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                Scalable infrastructure for modern marketing engines. Choose the tier that matches your current momentum.
+            </p>
+<!-- Toggle: Monthly/Annual -->
+<div class="mt-12 flex items-center justify-center gap-4">
+<span class="text-sm font-semibold text-on-surface-variant">Monthly</span>
+<button class="relative w-14 h-8 bg-surface-container-high rounded-full p-1 transition-colors hover:bg-surface-variant group">
+<div class="w-6 h-6 bg-primary-container rounded-full shadow-lg transform translate-x-6"></div>
+</button>
+<div class="flex items-center gap-2">
+<span class="text-sm font-semibold text-white">Annual</span>
+<span class="px-2 py-0.5 bg-secondary-container text-[10px] font-bold text-white rounded-full uppercase tracking-wider">Save 20%</span>
+</div>
+</div>
+</header>
+<!-- Pricing Grid: Bento Style -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto items-stretch">
+<!-- Starter Plan -->
+<div class="glass-card p-8 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:bg-surface-container-high/40">
+<div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-2xl font-bold text-white font-headline">Starter</h3>
+<p class="text-on-surface-variant text-sm mt-1">Foundation for new projects.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="rocket">rocket</span>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-extrabold text-white font-headline">$0</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">Up to 500 contacts</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">Basic analytics dashboard</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">Single channel support</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-4 bg-surface-container-highest text-white font-bold rounded-lg border border-white/5 hover:bg-surface-variant transition-all active:scale-95">
+                    Choose Plan
+                </button>
+</div>
+<!-- Pro Plan (Recommended) -->
+<div class="relative glass-card p-8 rounded-xl flex flex-col justify-between group transition-all duration-300 ring-2 ring-primary-container shadow-2xl shadow-primary-container/20 scale-105 z-10">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary-container rounded-full text-[12px] font-black text-white uppercase tracking-widest shadow-lg">
+                    Most Popular
+                </div>
+<div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-2xl font-bold text-white font-headline">Pro</h3>
+<p class="text-on-surface-variant text-sm mt-1">High-performance engine.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="bolt">bolt</span>
+</div>
+<div class="mb-8">
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-extrabold text-white font-headline">$79</span>
+<span class="text-on-surface-variant line-through text-sm">$99</span>
+<span class="text-on-surface-variant">/mo</span>
+</div>
+<p class="text-[10px] text-primary-fixed-dim mt-1 font-bold">Billed annually</p>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm font-semibold">10,000 active contacts</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Advanced automation workflows</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Multi-channel campaign sync</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-sm">Priority email support</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-4 bg-gradient-to-br from-primary-container to-inverse-primary text-white font-black rounded-lg shadow-xl shadow-primary-container/20 hover:brightness-110 transition-all active:scale-95">
+                    Choose Plan
+                </button>
+</div>
+<!-- Enterprise Plan -->
+<div class="glass-card p-8 rounded-xl flex flex-col justify-between group transition-all duration-300 hover:bg-surface-container-high/40">
+<div>
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="text-2xl font-bold text-white font-headline">Enterprise</h3>
+<p class="text-on-surface-variant text-sm mt-1">Custom-built for scale.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="corporate_fare">corporate_fare</span>
+</div>
+<div class="mb-8">
+<span class="text-4xl font-extrabold text-white font-headline">Custom</span>
+<p class="text-xs text-on-surface-variant mt-1">Talk to our experts</p>
+</div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">Unlimited data points</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">White-glove onboarding</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">Dedicated account strategist</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="check_circle">check_circle</span>
+<span class="text-sm">SSO &amp; Custom Security</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-4 bg-surface-container-highest text-white font-bold rounded-lg border border-white/5 hover:bg-surface-variant transition-all active:scale-95">
+                    Contact Sales
+                </button>
+</div>
+</div>
+<!-- Trust Section -->
+<section class="mt-24 max-w-5xl mx-auto text-center">
+<h2 class="text-2xl font-bold text-white mb-10 font-headline">Trusted by Industry Disruptors</h2>
+<div class="flex flex-wrap justify-center gap-12 opacity-50 grayscale contrast-125">
+<div class="h-8 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="diamond">diamond</span>
+<span class="font-bold tracking-tighter">LUMINA</span>
+</div>
+<div class="h-8 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="all_inclusive">all_inclusive</span>
+<span class="font-bold tracking-tighter">INFINITE</span>
+</div>
+<div class="h-8 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+<span class="font-bold tracking-tighter">SECURELY</span>
+</div>
+<div class="h-8 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="token">token</span>
+<span class="font-bold tracking-tighter">COBALT</span>
+</div>
+</div>
+</section>
+<!-- Feature Comparison (Condensed) -->
+<section class="mt-32 max-w-4xl mx-auto glass-card rounded-2xl overflow-hidden">
+<div class="p-8 border-b border-white/5 bg-surface-container-high/30">
+<h3 class="text-xl font-bold text-white font-headline">Core Infrastructure Features</h3>
+</div>
+<div class="divide-y divide-white/5">
+<div class="grid grid-cols-2 p-6 items-center">
+<span class="text-on-surface font-medium">Real-time Data Processing</span>
+<div class="flex justify-end gap-2">
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary text-[10px] font-bold rounded-full">ALL PLANS</span>
+</div>
+</div>
+<div class="grid grid-cols-2 p-6 items-center">
+<span class="text-on-surface font-medium">API Access &amp; SDKs</span>
+<div class="flex justify-end gap-2">
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold rounded-full">PRO +</span>
+</div>
+</div>
+<div class="grid grid-cols-2 p-6 items-center">
+<span class="text-on-surface font-medium">Custom Reporting Engine</span>
+<div class="flex justify-end gap-2">
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold rounded-full">ENTERPRISE ONLY</span>
+</div>
+</div>
+</div>
+</section>
+<footer class="mt-32 text-center pb-12">
+<p class="text-on-surface-variant text-sm">
+                Need help deciding? <a class="text-primary font-bold hover:underline" href="#">Chat with an expert</a> or view our <a class="text-primary font-bold hover:underline" href="#">pricing FAQ</a>.
+            </p>
+</footer>
+</main>
+<!-- Visual Accents (Editorial Aesthetics) -->
+<div class="fixed top-0 right-0 -z-10 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-indigo-900/20 blur-[100px] rounded-full pointer-events-none"></div>
+</body></html>

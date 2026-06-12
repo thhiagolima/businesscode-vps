@@ -1,0 +1,237 @@
+From 14721ff3067f6bcfc2d7c35a5b9efc0ecde0a38b Mon Sep 17 00:00:00 2001
+From: admbusiness <admbusiness@35-30-168-184.host.secureserver.net>
+Date: Wed, 3 Jun 2026 17:11:42 -0300
+Subject: [PATCH] =?UTF-8?q?fix(billing):=20B11=20=E2=80=94=20manual=5Fadju?=
+ =?UTF-8?q?stment=20colidia=20com=20bt=5Fidempotency=5Funique?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Sintoma reportado em 03/06/2026: ao adicionar saldo manualmente pela 2ª
+vez para o mesmo tenant, o admin recebia SQLSTATE 23000:
+  Duplicate entry '2-manual_adjustment-admin_action-1' for key
+  'bt_idempotency_unique'
+
+Causa raiz: o índice UNIQUE (tenant_id, type, reference_type, reference_id)
+foi criado em 29/05 (P0R-01) para idempotência forte de
+recharge/reserve/release. Mas BillingService::manualAdjustment usava
+reference_id = adminUserId. O mesmo admin ajustando 2x o mesmo tenant
+gerava (2, manual_adjustment, admin_action, 1) duas vezes → constraint
+violado, ação humana abortada.
+
+Fix em 2 partes:
+1. Migration 2026_06_03_120000_add_executed_by_to_balance_transactions
+   adiciona coluna nullable executed_by_user_id (FK users, on delete SET
+   NULL) onde fica registrado quem fez o ajuste.
+2. BillingService::manualAdjustment gera reference_id único combinando
+   microtime (μs) × 1000 + jitter de 3 dígitos. lockForUpdate no tenant
+   serializa chamadas concorrentes; jitter cobre o caso teórico de dois
+   workers no mesmo microssegundo. Admin executor migra para
+   executed_by_user_id.
+
+A semântica de idempotência forte continua valendo para recharge/reserve/
+release (sem mudanças neles). manual_adjustment passa a ser
+intencionalmente repetível (ação humana ad-hoc, não idempotente).
+
+Auditoria preservada:
+- AuditLog::record('billing.manual_adjustment', ..., $adminUserId) já
+  existia e não foi alterado.
+- BalanceTransaction.executed_by_user_id permite query "todos os ajustes
+  do admin X" sem perder o linkage histórico.
+- BalanceTransaction::executedBy() relação adicionada no model.
+
+Validação:
+- ManualAdjustmentRepeatableTest novo (2 testes, 8 assertions):
+  * mesmo admin fazendo 3 ajustes seguidos no mesmo tenant
+  * admins diferentes ajustando o mesmo tenant (preserva executor)
+- Suite billing/pentest completa: 37 testes, 1185 assertions, todos passam
+- Idempotência de recharge/reserve/release intocada
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ .../backend/app/Models/BalanceTransaction.php | 13 +++-
+ .../app/Services/Billing/BillingService.php   | 10 ++-
+ ...dd_executed_by_to_balance_transactions.php | 37 ++++++++++
+ .../ManualAdjustmentRepeatableTest.php        | 68 +++++++++++++++++++
+ 4 files changed, 124 insertions(+), 4 deletions(-)
+ create mode 100644 new_saas/backend/database/migrations/2026_06_03_120000_add_executed_by_to_balance_transactions.php
+ create mode 100644 new_saas/backend/tests/Feature/Billing/ManualAdjustmentRepeatableTest.php
+
+diff --git a/new_saas/backend/app/Models/BalanceTransaction.php b/new_saas/backend/app/Models/BalanceTransaction.php
+index 570952a8..4ec7ac41 100644
+--- a/new_saas/backend/app/Models/BalanceTransaction.php
++++ b/new_saas/backend/app/Models/BalanceTransaction.php
+@@ -21,16 +21,23 @@ class BalanceTransaction extends Model
+ 
+     protected $fillable = [
+         'tenant_id', 'type', 'amount_cents', 'balance_after_cents',
+-        'reference_type', 'reference_id', 'monthly_cycle_key',
++        'reference_type', 'reference_id', 'executed_by_user_id', 'monthly_cycle_key',
+         'description', 'meta',
+     ];
+ 
+     protected $casts = [
+-        'amount_cents' => 'integer',
++        'amount_cents'        => 'integer',
+         'balance_after_cents' => 'integer',
+-        'meta' => 'array',
++        'reference_id'        => 'integer',
++        'executed_by_user_id' => 'integer',
++        'meta'                => 'array',
+     ];
+ 
++    public function executedBy(): BelongsTo
++    {
++        return $this->belongsTo(User::class, 'executed_by_user_id');
++    }
++
+     public function tenant(): BelongsTo
+     {
+         return $this->belongsTo(Tenant::class);
+diff --git a/new_saas/backend/app/Services/Billing/BillingService.php b/new_saas/backend/app/Services/Billing/BillingService.php
+index baf2c038..86dd28fe 100644
+--- a/new_saas/backend/app/Services/Billing/BillingService.php
++++ b/new_saas/backend/app/Services/Billing/BillingService.php
+@@ -218,13 +218,21 @@ public function manualAdjustment(int $tenantId, int $amountCents, string $reason
+             $tenant->increment('balance_cents', $amountCents);
+             $tenant->refresh();
+ 
++            // reference_id precisa ser único por transação manual para não
++            // colidir com bt_idempotency_unique. O admin que executou fica em
++            // executed_by_user_id (coluna dedicada). Combinamos microtime (μs)
++            // × 1000 + jitter de 3 dígitos — chance de colisão desprezível
++            // (lockForUpdate já serializa chamadas no mesmo tenant).
++            $uniqueRefId = (int) (microtime(true) * 1_000_000) * 1_000 + random_int(0, 999);
++
+             $tx = BalanceTransaction::create([
+                 'tenant_id'           => $tenantId,
+                 'type'                => 'manual_adjustment',
+                 'amount_cents'        => $amountCents,
+                 'balance_after_cents' => $tenant->balance_cents,
+                 'reference_type'      => 'admin_action',
+-                'reference_id'        => $adminUserId,
++                'reference_id'        => $uniqueRefId,
++                'executed_by_user_id' => $adminUserId,
+                 'description'         => $reason,
+             ]);
+ 
+diff --git a/new_saas/backend/database/migrations/2026_06_03_120000_add_executed_by_to_balance_transactions.php b/new_saas/backend/database/migrations/2026_06_03_120000_add_executed_by_to_balance_transactions.php
+new file mode 100644
+index 00000000..40539f74
+--- /dev/null
++++ b/new_saas/backend/database/migrations/2026_06_03_120000_add_executed_by_to_balance_transactions.php
+@@ -0,0 +1,37 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++/**
++ * B11 — Ajuste manual de saldo colide com bt_idempotency_unique.
++ *
++ * O UNIQUE (tenant_id, type, reference_type, reference_id) foi criado para
++ * idempotência forte de recharge/reserve/release. Para manual_adjustment,
++ * o reference_id era o admin_user_id, então o mesmo admin não conseguia
++ * fazer 2 ajustes para o mesmo tenant — erro 1062 ao adicionar saldo.
++ *
++ * Fix: coluna dedicada para "quem executou", liberando reference_id pra
++ * receber um identificador único por transação (timestamp ms + jitter)
++ * — preserva a UNIQUE constraint para recharge/reserve/release intacta.
++ */
++return new class extends Migration {
++    public function up(): void
++    {
++        Schema::table('balance_transactions', function (Blueprint $t) {
++            $t->foreignId('executed_by_user_id')
++                ->nullable()
++                ->after('reference_id')
++                ->constrained('users')
++                ->nullOnDelete();
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('balance_transactions', function (Blueprint $t) {
++            $t->dropConstrainedForeignId('executed_by_user_id');
++        });
++    }
++};
+diff --git a/new_saas/backend/tests/Feature/Billing/ManualAdjustmentRepeatableTest.php b/new_saas/backend/tests/Feature/Billing/ManualAdjustmentRepeatableTest.php
+new file mode 100644
+index 00000000..1a39991e
+--- /dev/null
++++ b/new_saas/backend/tests/Feature/Billing/ManualAdjustmentRepeatableTest.php
+@@ -0,0 +1,68 @@
++<?php
++
++namespace Tests\Feature\Billing;
++
++use App\Models\BalanceTransaction;
++use App\Models\Tenant;
++use App\Models\User;
++use App\Services\Billing\BillingService;
++use Illuminate\Foundation\Testing\RefreshDatabase;
++use Tests\TestCase;
++
++/**
++ * B11 — Regressão: ajustes manuais sequenciais do mesmo admin para o mesmo
++ * tenant não podem colidir com bt_idempotency_unique.
++ *
++ * Antes do fix, BillingService::manualAdjustment usava reference_id = admin
++ * user id, então 2 ajustes do mesmo admin geravam Integrity violation 1062.
++ *
++ * Agora cada manual_adjustment recebe reference_id único (microtime + jitter)
++ * e o admin executor fica em executed_by_user_id.
++ */
++class ManualAdjustmentRepeatableTest extends TestCase
++{
++    use RefreshDatabase;
++
++    public function test_same_admin_can_make_multiple_adjustments_for_same_tenant(): void
++    {
++        $tenant = Tenant::factory()->create(['balance_cents' => 100]);
++        $admin  = User::factory()->create(['role' => 'finance']);
++        $svc    = app(BillingService::class);
++
++        $svc->manualAdjustment($tenant->id, 5000, 'primeiro ajuste', $admin->id);
++        $svc->manualAdjustment($tenant->id, 3000, 'segundo ajuste', $admin->id);
++        $svc->manualAdjustment($tenant->id, -2000, 'estorno parcial', $admin->id);
++
++        $this->assertSame(100 + 5000 + 3000 - 2000, (int) $tenant->fresh()->balance_cents);
++
++        $rows = BalanceTransaction::withoutGlobalScopes()
++            ->where('tenant_id', $tenant->id)
++            ->where('type', 'manual_adjustment')
++            ->get();
++
++        $this->assertCount(3, $rows);
++        // Admin executor preservado em coluna dedicada
++        $rows->each(fn ($r) => $this->assertSame($admin->id, (int) $r->executed_by_user_id));
++        // reference_ids devem ser todos distintos para satisfazer bt_idempotency_unique
++        $this->assertCount(3, $rows->pluck('reference_id')->unique());
++    }
++
++    public function test_different_admins_can_adjust_same_tenant(): void
++    {
++        $tenant  = Tenant::factory()->create(['balance_cents' => 0]);
++        $admin1  = User::factory()->create(['role' => 'finance']);
++        $admin2  = User::factory()->create(['role' => 'superadmin']);
++        $svc     = app(BillingService::class);
++
++        $svc->manualAdjustment($tenant->id, 1000, 'ajuste do admin1', $admin1->id);
++        $svc->manualAdjustment($tenant->id, 2000, 'ajuste do admin2', $admin2->id);
++
++        $rows = BalanceTransaction::withoutGlobalScopes()
++            ->where('tenant_id', $tenant->id)
++            ->orderBy('id')
++            ->get();
++
++        $this->assertSame($admin1->id, (int) $rows[0]->executed_by_user_id);
++        $this->assertSame($admin2->id, (int) $rows[1]->executed_by_user_id);
++    }
++}
+-- 
+2.48.1.windows.1
+

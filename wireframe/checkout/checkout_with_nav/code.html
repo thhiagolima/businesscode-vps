@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout | BusinessCode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#161a33",
+                    "secondary-fixed": "#d8e2ff",
+                    "on-secondary-fixed-variant": "#004395",
+                    "error-container": "#93000a",
+                    "surface-tint": "#b3c5ff",
+                    "surface-bright": "#343752",
+                    "surface-dim": "#0d112a",
+                    "outline-variant": "#424656",
+                    "surface-container-high": "#242842",
+                    "surface": "#0d112a",
+                    "on-secondary-fixed": "#001a42",
+                    "surface-variant": "#2f334e",
+                    "surface-container-highest": "#2f334e",
+                    "secondary-container": "#0566d9",
+                    "tertiary-container": "#ca4101",
+                    "on-secondary": "#002e6a",
+                    "secondary": "#adc6ff",
+                    "on-primary-fixed": "#00174a",
+                    "inverse-on-surface": "#2b2f49",
+                    "on-primary-container": "#f5f5ff",
+                    "tertiary-fixed-dim": "#ffb59c",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#dee0ff",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#b3c5ff",
+                    "on-surface-variant": "#c2c6d8",
+                    "on-background": "#dee0ff",
+                    "surface-container": "#1a1e37",
+                    "on-tertiary": "#5c1900",
+                    "on-secondary-container": "#e6ecff",
+                    "primary-fixed": "#dbe1ff",
+                    "surface-container-lowest": "#080c25",
+                    "primary-container": "#0064ff",
+                    "inverse-primary": "#0054d8",
+                    "on-primary": "#002a76",
+                    "tertiary": "#ffb59c",
+                    "on-tertiary-fixed-variant": "#832700",
+                    "on-primary-fixed-variant": "#003ea6",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "on-error": "#690005",
+                    "on-surface": "#dee0ff",
+                    "background": "#0d112a",
+                    "tertiary-fixed": "#ffdbd0",
+                    "outline": "#8c90a2",
+                    "primary": "#b3c5ff",
+                    "on-tertiary-container": "#fff4f0",
+                    "on-tertiary-fixed": "#390c00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .glass-card {
+            background: rgba(22, 27, 69, 0.6);
+            backdrop-filter: blur(12px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface min-h-screen">
+<!-- SideNavBar from SCREEN_6 -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#161a33] dark:bg-[#161a33] flex flex-col h-full py-6 z-50">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0064ff] to-[#0054d8] flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="font-['Manrope'] font-black tracking-tight text-xl text-white">BusinessCode</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Marketing Suite</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-2">
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span>Campaigns</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Contacts</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span>Conversations</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">filter_alt</span>
+<span>Funnels</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span>Chatbot</span>
+</a>
+<div class="pt-10">
+<a class="flex items-center gap-3 text-slate-400 hover:text-white transition-colors px-4 py-3 font-['Manrope'] font-bold tracking-tight hover:bg-[#242842] rounded-lg mx-2 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</nav>
+<div class="px-6 mt-auto">
+<div class="p-4 rounded-xl bg-surface-container-high/40 border border-outline-variant/10">
+<p class="text-xs text-slate-400 mb-2">System Status</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+<span class="text-xs font-medium text-on-surface">All channels active</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell (Adjusted width for sidebar) -->
+<nav class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-slate-950/60 backdrop-blur-xl flex justify-between items-center px-8 h-16 shadow-2xl shadow-blue-900/10">
+<div class="flex items-center gap-4">
+<!-- Dashboard contextual title could go here if needed -->
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-8 text-slate-400 font-medium">
+<a class="hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Products</a>
+<a class="hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Enterprise</a>
+<a class="hover:bg-white/5 transition-colors px-3 py-1 rounded-lg" href="#">Support</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer active:scale-95 transition-transform" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer active:scale-95 transition-transform" data-icon="settings">settings</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="User profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9IMb8KbaOpIU5lc3uhLVLDYDrPKMC9E5ouMGfYILzuczvlLb6xMCpSYBUC9mRRY2JbuguGnsQdCq2861kTXzGnRbXUUo9E9Y9NI02h6eiCn9KoWDzQGs9CaPIhwRvc5VZB62lx1vNiCZYoYPCJwvJk95AZfei_Mc-WLRGdTg_B5kbK2z8j2SLb7tZuSwwyrhyp4-oZ4lqpbIKzrAtrLbODQeRrYBSJY6wC1D8idklmuzQqaU7iKoLS79p8RNEnic2auC20obyK98"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="ml-64 pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto">
+<div class="flex flex-col lg:flex-row gap-12">
+<!-- Left Column: Payment & Billing -->
+<div class="flex-1 space-y-12">
+<header>
+<h1 class="text-4xl font-extrabold tracking-tight text-white mb-2">Checkout</h1>
+<p class="text-on-surface-variant font-body">Complete your subscription to unlock the Marketing Engine.</p>
+</header>
+<!-- Section 1: Payment Method -->
+<section class="bg-surface-container-low p-8 rounded-xl space-y-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="credit_card">credit_card</span>
+<h2 class="text-xl font-bold text-white">Payment Method</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="md:col-span-2 space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Card Number</label>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white placeholder-slate-500 font-body transition-all" placeholder="0000 0000 0000 0000" type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+<span class="material-symbols-outlined text-slate-500" data-icon="credit_card">credit_card</span>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Expiry Date</label>
+<input class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white placeholder-slate-500 font-body transition-all" placeholder="MM / YY" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">CVC</label>
+<input class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white placeholder-slate-500 font-body transition-all" placeholder="123" type="text"/>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Name on Card</label>
+<input class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white placeholder-slate-500 font-body transition-all" placeholder="John Doe" type="text"/>
+</div>
+</div>
+</section>
+<!-- Section 2: Billing Address -->
+<section class="bg-surface-container-low p-8 rounded-xl space-y-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<h2 class="text-xl font-bold text-white">Billing Address</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">Country</label>
+<select class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white font-body transition-all appearance-none">
+<option>United States</option>
+<option>United Kingdom</option>
+<option>Germany</option>
+<option>Canada</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-surface-variant uppercase tracking-wider">ZIP / Postal Code</label>
+<input class="w-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-4 text-white placeholder-slate-500 font-body transition-all" placeholder="90210" type="text"/>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Order Summary -->
+<div class="lg:w-[400px]">
+<div class="sticky top-28 glass-card rounded-2xl p-8 border border-white/5 shadow-2xl">
+<h3 class="text-xl font-bold text-white mb-8">Order Summary</h3>
+<div class="space-y-6 pb-8 border-b border-white/5">
+<div class="flex justify-between items-start">
+<div>
+<p class="font-bold text-white text-lg">Growth Plan</p>
+<p class="text-sm text-on-surface-variant">Billed monthly</p>
+</div>
+<span class="font-headline text-xl font-bold text-white">$49.00</span>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Coupon Code</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-primary/50" placeholder="Enter code" type="text"/>
+<button class="px-4 py-2 bg-surface-container-high text-sm font-bold rounded-lg hover:bg-surface-bright transition-colors">Apply</button>
+</div>
+</div>
+</div>
+<div class="py-6 space-y-4">
+<div class="flex justify-between text-on-surface-variant">
+<span>Subtotal</span>
+<span>$49.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Tax (0%)</span>
+<span>$0.00</span>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-lg font-bold text-white">Total</span>
+<span class="text-3xl font-extrabold text-white tracking-tighter">$49.00</span>
+</div>
+</div>
+<button class="w-full mt-4 py-5 bg-gradient-to-r from-primary-container to-inverse-primary rounded-xl flex items-center justify-center gap-3 group active:scale-[0.98] transition-all shadow-xl shadow-blue-600/20">
+<span class="material-symbols-outlined text-white" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="text-white font-bold text-lg tracking-tight">Complete Purchase</span>
+</button>
+<p class="text-center text-xs text-on-surface-variant mt-6 px-4">
+                    By clicking "Complete Purchase", you agree to our Terms of Service and Privacy Policy.
+                </p>
+<div class="mt-10 flex items-center justify-center gap-6 opacity-40 grayscale group-hover:grayscale-0 transition-all">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
+<span class="text-[10px] font-bold tracking-widest uppercase">SSL Secured</span>
+</div>
+<div class="h-4 w-px bg-white/20"></div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="payments">payments</span>
+<span class="text-[10px] font-bold tracking-widest uppercase">Stripe</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="ml-64 py-12 bg-surface-container-low/30">
+<div class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="text-on-surface-variant text-sm">
+            © 2024 BusinessCode Inc. All rights reserved.
+        </div>
+<div class="flex gap-8">
+<a class="text-sm text-on-surface-variant hover:text-white transition-colors" href="#">Privacy</a>
+<a class="text-sm text-on-surface-variant hover:text-white transition-colors" href="#">Terms</a>
+<a class="text-sm text-on-surface-variant hover:text-white transition-colors" href="#">Help Center</a>
+</div>
+</div>
+</footer>
+</body></html>

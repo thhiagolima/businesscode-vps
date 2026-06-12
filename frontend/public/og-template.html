@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>OG Template — BusinessCode</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;9..40,700;9..40,800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#060918;color:#e2e6f0;position:relative}
+.stage{width:1200px;height:630px;position:relative;overflow:hidden;padding:60px 72px;display:flex;flex-direction:column;justify-content:space-between}
+
+.bg-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.bg-orb.a{width:540px;height:540px;background:rgba(0,100,255,.22);top:-160px;right:-80px}
+.bg-orb.b{width:380px;height:380px;background:rgba(13,204,106,.10);bottom:-140px;left:-60px}
+.bg-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 75%)}
+
+.row{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:24px}
+
+.logo{display:flex;align-items:center;gap:14px;font-weight:800;font-size:24px;color:#fff;letter-spacing:-.01em}
+.logo svg{width:42px;height:42px}
+
+.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;background:rgba(0,100,255,.10);color:#2979ff;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+
+h1{font-size:78px;font-weight:800;color:#fff;line-height:1.04;letter-spacing:-.035em;max-width:1060px;position:relative;z-index:2;margin-top:28px}
+h1 .em{font-style:normal;background:linear-gradient(135deg,#2979ff,#00c3ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+.sub{font-size:26px;color:#a5aec2;line-height:1.45;max-width:880px;font-weight:500;margin-top:18px;position:relative;z-index:2}
+
+.bottom{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:32px}
+
+.pills{display:flex;gap:12px;flex-wrap:wrap}
+.pill{padding:10px 18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:50px;font-size:16px;color:#e2e6f0;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:#0dcc6a;flex-shrink:0}
+.pill.blue .dot{background:#2979ff}
+.pill.yellow .dot{background:#eab308}
+
+.stat{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.stat .big{font-family:'JetBrains Mono',monospace;font-size:54px;font-weight:800;color:#0dcc6a;letter-spacing:-.03em;line-height:1}
+.stat .lbl{font-size:14px;color:#a5aec2;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="bg-orb a"></div>
+  <div class="bg-orb b"></div>
+  <div class="bg-lines"></div>
+
+  <div class="row">
+    <div class="logo">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="14" fill="#0064ff"/>
+        <path d="M16 18C16 14 20 10 24 10H40C44 10 48 14 48 18V34C48 38 44 42 40 42H28L20 50V42H24C20 42 16 38 16 34Z" fill="#fff"/>
+        <path d="M20 14C20 12 22 10 24 10H44C48 10 52 14 52 18V30C52 34 48 38 44 38" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      BusinessCode
+    </div>
+    <span class="badge">Time de marketing por crédito</span>
+  </div>
+
+  <div>
+    <h1>Você lê,<br>aprova,<br><span class="em">vai dormir.</span></h1>
+    <p class="sub">A IA escreve a copy, narra com voz humana em português e dispara SMS, voz e e-mail. Você só aprova.</p>
+  </div>
+
+  <div class="bottom">
+    <div class="pills">
+      <span class="pill blue"><span class="dot"></span>Brief-to-Boom™</span>
+      <span class="pill"><span class="dot"></span>SMS · Voz · E-mail</span>
+      <span class="pill yellow"><span class="dot"></span>7 dias grátis · sem cartão</span>
+    </div>
+    <div class="stat">
+      <span class="big">31%</span>
+      <span class="lbl">CTR médio em SMS</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const entries = (await getCollection('glossario')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+<BaseLayout title="Glossário de mensageria — BusinessCode" description="Termos de mensageria, WhatsApp API e automação explicados de forma simples.">
+  <h1>Glossário</h1>
+  <ul>
+    {entries.map((e) => (
+      <li><a href={`/glossario/${e.data.slug}`}>{e.data.title}</a> — {e.data.description}</li>
+    ))}
+  </ul>
+</BaseLayout>

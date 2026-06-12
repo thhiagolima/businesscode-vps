@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BusinessCode | Email Campaign Content</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#1a1e37",
+                        "outline": "#8c90a2",
+                        "on-background": "#dee0ff",
+                        "surface-container-highest": "#2f334e",
+                        "on-tertiary-fixed": "#390c00",
+                        "on-secondary-container": "#e6ecff",
+                        "background": "#0d112a",
+                        "surface-container-low": "#161a33",
+                        "tertiary-fixed": "#ffdbd0",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb59c",
+                        "on-secondary-fixed": "#001a42",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-surface-variant": "#c2c6d8",
+                        "primary": "#b3c5ff",
+                        "on-tertiary-container": "#fff4f0",
+                        "on-error-container": "#ffdad6",
+                        "surface-dim": "#0d112a",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed-variant": "#003ea6",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "surface-container-lowest": "#080c25",
+                        "on-primary-fixed": "#00174a",
+                        "surface-variant": "#2f334e",
+                        "outline-variant": "#424656",
+                        "on-surface": "#dee0ff",
+                        "surface": "#0d112a",
+                        "on-primary": "#002a76",
+                        "secondary-fixed": "#d8e2ff",
+                        "inverse-primary": "#0054d8",
+                        "on-error": "#690005",
+                        "surface-tint": "#b3c5ff",
+                        "primary-container": "#0064ff",
+                        "surface-container-high": "#242842",
+                        "secondary-container": "#0566d9",
+                        "tertiary-container": "#ca4101",
+                        "error": "#ffb4ab",
+                        "secondary": "#adc6ff",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface-bright": "#343752",
+                        "on-tertiary": "#5c1900",
+                        "on-primary-container": "#f5f5ff",
+                        "inverse-surface": "#dee0ff",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "inverse-on-surface": "#2b2f49",
+                        "on-secondary": "#002e6a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .glass-card { background: rgba(22, 27, 69, 0.6); backdrop-filter: blur(12px); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-white">
+<!-- SideNavBar Shell -->
+<nav class="bg-[#161a33] dark:bg-[#161a33] h-screen w-64 fixed left-0 top-0 flex flex-col h-full py-6 px-4 z-50">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-10 h-10 bg-gradient-to-br from-[#0064ff] to-[#0054d8] rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<div>
+<h1 class="text-2xl font-bold tracking-tight text-white font-manrope">BusinessCode</h1>
+<p class="text-[10px] text-slate-400 font-label tracking-widest uppercase">Marketing OS</p>
+</div>
+</div>
+<div class="flex-1 space-y-2">
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-sm">Dashboard</span>
+</a>
+<a class="text-white bg-gradient-to-r from-[#0064ff] to-[#0054d8] rounded-lg shadow-lg flex items-center gap-4 px-4 py-3" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="font-label text-sm">Campaigns</span>
+</a>
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label text-sm">Contacts</span>
+</a>
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-label text-sm">Conversations</span>
+</a>
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">filter_alt</span>
+<span class="font-label text-sm">Funnels</span>
+</a>
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label text-sm">Chatbot</span>
+</a>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant/10">
+<a class="text-slate-400 hover:text-white transition-colors flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-[#242842]" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-sm">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-[#0d112a]/60 backdrop-blur-xl flex items-center justify-between px-8">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 w-full text-sm focus:ring-2 focus:ring-primary-container/20 text-on-surface transition-all" placeholder="Search campaigns, content, assets..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-slate-400 hover:text-white transition-opacity relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-slate-400 hover:text-white transition-opacity">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant/20 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-xs font-bold text-white">Alex Sterling</p>
+<p class="text-[10px] text-slate-400">Growth Lead</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container/30" data-alt="Close-up portrait of a professional male growth lead with friendly expression in studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDySns9E7oQneXtARx58ZFJSTB8wprYCasnvQ3dTnO0EWWIUnwRZA2gZBDAsWuZ2P27ffzoeT1G68ue1KJMp3tdl8QRolmLuz3Htwt7oCNXBvkgJCB73KIGnEaWrt-bzndvZgqZO17B0mOxYNRiHhGNJVBDe7G0Xpu7ljH7CPtKva_Ev6TcERyh78ChWCkKiRCvpeoW5UACDmToVRAOoE-arUdkFZPDJxs6h0o9smzhGdLz42S0bIaRHTPga6rNN3GgzIczMy1f9c8"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen">
+<div class="p-8 max-w-[1600px] mx-auto">
+<!-- Breadcrumbs / Title Header -->
+<header class="mb-8">
+<div class="flex items-center gap-2 text-xs text-slate-400 mb-2 uppercase tracking-widest font-bold">
+<span>Campaigns</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span>Winter Launch 2024</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary">Content Strategy</span>
+</div>
+<h2 class="text-4xl font-manrope font-extrabold text-white tracking-tight">Email Content Generation</h2>
+</header>
+<div class="grid grid-cols-12 gap-8 items-start">
+<!-- LEFT COLUMN (Briefing + Controls) -->
+<aside class="col-span-12 lg:col-span-4 sticky top-24 space-y-6">
+<div class="glass-card p-6 rounded-[14px] border border-outline-variant/10 shadow-2xl">
+<!-- Section: Email Subject -->
+<section class="mb-8">
+<label class="block text-xs font-bold text-primary-fixed-dim uppercase tracking-widest mb-3">Email Subject</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-highest border-none rounded-[10px] p-4 text-on-surface focus:ring-2 focus:ring-primary-container/20 transition-all placeholder:text-slate-500" placeholder="Enter email subject" type="text" value="Unlock Your Potential with Marketing OS"/>
+<div class="mt-2 flex justify-between items-center px-1">
+<span class="text-[10px] text-slate-400 font-medium">38 / 60 characters</span>
+<span class="text-[10px] text-green-400 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> Perfect length</span>
+</div>
+</div>
+</section>
+<!-- Section: AI Briefing -->
+<section class="space-y-5 mb-8">
+<div class="flex items-center justify-between">
+<label class="block text-xs font-bold text-primary-fixed-dim uppercase tracking-widest">AI Briefing</label>
+<span class="bg-primary-container/10 text-primary-fixed-dim text-[10px] px-2 py-0.5 rounded-full font-bold">SMART GENERATE</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-[11px] text-slate-400 mb-1.5 ml-1 font-medium">Product / Service</p>
+<input class="w-full bg-surface-container-highest border-none rounded-[10px] py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary-container/20" type="text" value="BusinessCode Marketing Platform"/>
+</div>
+<div>
+<p class="text-[11px] text-slate-400 mb-1.5 ml-1 font-medium">Target Audience</p>
+<input class="w-full bg-surface-container-highest border-none rounded-[10px] py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary-container/20" type="text" value="Mid-market CMOs and Digital Strategists"/>
+</div>
+<div>
+<p class="text-[11px] text-slate-400 mb-1.5 ml-1 font-medium">Main Benefit</p>
+<textarea class="w-full bg-surface-container-highest border-none rounded-[10px] py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary-container/20 resize-none" rows="2">Automated omnichannel scaling without increasing overhead costs.</textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[11px] text-slate-400 mb-1.5 ml-1 font-medium">Tone</p>
+<select class="w-full bg-surface-container-highest border-none rounded-[10px] py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary-container/20 appearance-none">
+<option>Professional</option>
+<option>Casual</option>
+<option>Urgent</option>
+<option>Friendly</option>
+</select>
+</div>
+<div>
+<p class="text-[11px] text-slate-400 mb-1.5 ml-1 font-medium">Versions</p>
+<select class="w-full bg-surface-container-highest border-none rounded-[10px] py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary-container/20">
+<option>1</option>
+<option>2</option>
+<option selected="">3</option>
+<option>4</option>
+<option>5</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Actions -->
+<div class="space-y-3 pt-4 border-t border-outline-variant/10">
+<button class="w-full bg-gradient-to-r from-[#0064ff] to-[#0054d8] text-white font-bold py-4 rounded-[10px] shadow-lg shadow-primary-container/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                                Generate Email Variations
+                            </button>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-surface-container-highest text-on-surface-variant font-bold text-xs py-3 rounded-[10px] hover:bg-surface-bright transition-all border border-outline-variant/15">
+                                    Improve with AI
+                                </button>
+<button class="bg-surface-container-highest text-on-surface-variant font-bold text-xs py-3 rounded-[10px] hover:bg-surface-bright transition-all border border-outline-variant/15">
+                                    Save as template
+                                </button>
+</div>
+</div>
+</div>
+<div class="p-6 rounded-[14px] bg-primary-container/5 border border-primary-container/10">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary">info</span>
+<h4 class="text-sm font-bold text-white">Generation Tip</h4>
+</div>
+<p class="text-xs text-slate-400 leading-relaxed">Specific CTAs perform 42% better. Try mentioning a specific time or action like "Book my 15-min strategy audit."</p>
+</div>
+</aside>
+<!-- RIGHT COLUMN (Content + Preview) -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<!-- Tabs -->
+<div class="flex items-center gap-8 border-b border-outline-variant/10 px-2">
+<button class="pb-4 text-sm font-bold text-primary border-b-2 border-primary transition-all relative">
+                            Generated
+                            <span class="absolute -top-1 -right-4 w-5 h-5 bg-primary text-on-primary flex items-center justify-center rounded-full text-[10px]">3</span>
+</button>
+<button class="pb-4 text-sm font-bold text-slate-400 hover:text-white transition-all">
+                            Manual Editor
+                        </button>
+</div>
+<!-- Generated Tab Content -->
+<div class="space-y-6">
+<!-- Card 1 (Selected) -->
+<div class="group relative bg-surface-container-low rounded-xl p-1 shadow-2xl transition-all border-2 border-primary-container shadow-primary-container/5">
+<div class="bg-surface-container-low rounded-lg p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-lg font-bold text-white mb-1">Subject: 10x Your Marketing Without the Chaos</h3>
+<div class="flex items-center gap-4 text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">description</span> 142 Words</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 1.2 Min Read</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-surface-container-highest text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+<div class="bg-primary-container text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+                                            SELECTED
+                                        </div>
+</div>
+</div>
+<p class="text-sm text-slate-300 leading-relaxed line-clamp-3 italic bg-surface-container-lowest/50 p-4 rounded-lg">
+                                    "Hi [First Name], Running a marketing team shouldn't feel like air traffic control during a storm. We built BusinessCode to automate the repetitive parts of your workflow, so you can focus on high-level strategy..."
+                                </p>
+<div class="mt-4 flex justify-end">
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">View Full Draft <span class="material-symbols-outlined text-[16px]">arrow_forward</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-low rounded-xl p-1 border border-outline-variant/10 hover:border-primary-container/30 transition-all">
+<div class="bg-surface-container-low rounded-lg p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-lg font-bold text-white mb-1">Subject: Automation: The CMO's Secret Weapon</h3>
+<div class="flex items-center gap-4 text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">description</span> 118 Words</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 0.9 Min Read</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-surface-container-highest text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-1.5 rounded-lg text-[10px] font-bold hover:bg-primary-container hover:text-white transition-all">
+                                            USE THIS VERSION
+                                        </button>
+</div>
+</div>
+<p class="text-sm text-slate-400 leading-relaxed line-clamp-2">
+                                    "Dear [First Name], Efficiency isn't just about doing things faster—it's about doing the right things automatically. BusinessCode empowers CMOs to..."
+                                </p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-low rounded-xl p-1 border border-outline-variant/10 hover:border-primary-container/30 transition-all">
+<div class="bg-surface-container-low rounded-lg p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-lg font-bold text-white mb-1">Subject: Stop Wasting Your Marketing Budget</h3>
+<div class="flex items-center gap-4 text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">description</span> 165 Words</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 1.5 Min Read</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-surface-container-highest text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-1.5 rounded-lg text-[10px] font-bold hover:bg-primary-container hover:text-white transition-all">
+                                            USE THIS VERSION
+                                        </button>
+</div>
+</div>
+<p class="text-sm text-slate-400 leading-relaxed line-clamp-2">
+                                    "Hello, Every dollar spent on manual tracking is a dollar lost to growth. Let's talk about how BusinessCode integrates your entire funnel..."
+                                </p>
+</div>
+</div>
+</div>
+<!-- Email Preview Section -->
+<div class="glass-card rounded-[14px] overflow-hidden border border-outline-variant/10">
+<div class="bg-surface-container-high px-6 py-4 flex justify-between items-center border-b border-outline-variant/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">visibility</span>
+<span class="text-sm font-bold text-white uppercase tracking-wider">Live Preview</span>
+</div>
+<div class="flex bg-surface-container-highest rounded-lg p-1">
+<button class="px-3 py-1 text-[10px] font-bold rounded-md bg-primary-container text-white">DESKTOP</button>
+<button class="px-3 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white transition-colors">MOBILE</button>
+</div>
+</div>
+<div class="p-10 bg-slate-100 min-h-[500px] flex justify-center">
+<div class="bg-white w-full max-w-2xl shadow-xl rounded-lg overflow-hidden flex flex-col">
+<!-- Inbox Header Mockup -->
+<div class="bg-slate-50 border-b border-slate-200 p-6">
+<div class="flex gap-4 items-start">
+<div class="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center text-white font-bold shrink-0">BC</div>
+<div class="flex-1 overflow-hidden">
+<h4 class="text-slate-900 font-bold text-lg leading-tight mb-1">10x Your Marketing Without the Chaos</h4>
+<div class="flex justify-between items-baseline text-xs text-slate-500">
+<span>From: <strong class="text-slate-700">Alex Sterling via BusinessCode</strong> &lt;alex@bizcode.io&gt;</span>
+<span>12:45 PM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Body -->
+<div class="p-8 text-slate-800 leading-relaxed font-body">
+<p class="mb-4">Hi [First Name],</p>
+<p class="mb-4">Running a marketing team shouldn't feel like air traffic control during a storm. We know how much time is lost toggling between analytics tabs and manual reporting tools.</p>
+<p class="mb-4">We built <strong>BusinessCode</strong> to automate the repetitive parts of your workflow, so you can focus on high-level strategy and creative vision.</p>
+<p class="mb-8">With our Winter 2024 update, you can now scale your omnichannel presence by 10x without adding a single person to your payroll.</p>
+<div class="my-8 flex justify-center">
+<a class="bg-[#0064ff] text-white px-8 py-4 rounded-lg font-bold shadow-lg shadow-blue-200 inline-block" href="#">Schedule My Growth Audit</a>
+</div>
+<p class="mb-2">Best regards,</p>
+<p class="font-bold text-slate-900">Alex Sterling</p>
+<p class="text-xs text-slate-500">Growth Lead @ BusinessCode</p>
+</div>
+<!-- Footer -->
+<div class="mt-auto p-6 bg-slate-50 border-t border-slate-100 text-center">
+<p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-4">Sent with BusinessCode Marketing OS</p>
+<div class="flex justify-center gap-4 text-[10px] text-slate-400">
+<a class="underline" href="#">Unsubscribe</a>
+<a class="underline" href="#">Manage Preferences</a>
+<a class="underline" href="#">Privacy Policy</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for quick action (Suppressed as per rules for detailed context, but including hidden for reference) -->
+<button class="hidden fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined">send</span>
+</button>
+</body></html>

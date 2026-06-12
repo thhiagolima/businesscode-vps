@@ -1,0 +1,237 @@
+From a22daca1fbfc27391220c16d1f94840f7236c338 Mon Sep 17 00:00:00 2001
+From: admbusiness <admbusiness@35-30-168-184.host.secureserver.net>
+Date: Sat, 30 May 2026 06:10:24 -0300
+Subject: [PATCH 2/6] fix(ui): close 3 Sprint-1 follow-up bugs from same UX
+ audit (B8/B9/B10)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+3 visual bugs reportados pelo usuário ao revisar o build pós-fix do Sprint 1:
+
+B8 — Filtro de campanhas com selects ocupando linhas inteiras
+- Causa: Bootstrap define .form-select { width: 100% } por padrão. Dentro
+  do FilterBar (display:flex; flex-wrap:wrap), cada select preenchia 100%
+  da largura disponível e forçava wrap, empilhando search/canal/status
+  em 3 linhas separadas em vez de lado a lado.
+- Fix em FilterBar.vue: sobrescrever width:auto + flex:0 1 auto nos
+  .form-select dentro do escopo do FilterBar. Search ganhou flex:1 1 220px
+  para crescer dominante mas com base flexível.
+
+B9 — Cards de canal pendente/locked com texto fantasma e botão Upgrade
+fora do card.
+- Causa: opacity:0.55 aplicado no .sc-card--locked + opacity:0.3 nos
+  elementos internos. Opacidades MULTIPLICAVAM (0.55 × 0.3 = 0.165),
+  deixando texto quase invisível. Pior: o div com "Disponível no plano
+  Starter+" + botão Upgrade ficava fora do contêiner flex centralizado,
+  parecendo flutuar logo abaixo do card.
+- Fix em SelectChannel.vue:
+  * Remover opacity do card raiz, trocar por filter:saturate(0.5/0.7)
+    + cores muted (var(--bc-text-muted)) nos elementos
+  * Novo bloco .sc-card__upgrade (flex column, items centered) que
+    encaixa CTA dentro do card com hierarquia clara
+  * Aplicado a pending_setup e locked (ambos tinham o mesmo problema)
+
+B10 — Etapa 1 "Identidade da Campanha" continuava dominando visualmente
+depois da campanha já ter sido criada. Hero centralizado com ícone 56px +
+H2 + descrição + input grande ocupava toda a tela ainda quando o usuário
+já tinha avançado para "Detalhes do Briefing".
+- Fix em Create.vue: v-if="!campaignId" no hero, v-else renderiza um
+  header compacto inline com badge "01" + título pequeno + input edit
+  inline (autosave on blur via onSaveField) + badge do canal. Briefing
+  passa a ser o foco visual da etapa, como deveria. Removida redundância
+  do badge "CANAL X" na sub-seção 02 (agora aparece só uma vez em 01).
+
+Validação:
+- vite build passa (17.66s)
+- Screenshots FIX-campaigns-list.jpeg, FIX-select-channel.jpeg,
+  FIX-create-step1-after.jpeg confirmam os 3 fixes.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ .../frontend/src/components/ui/FilterBar.vue  |  7 +-
+ .../frontend/src/pages/campaigns/Create.vue   | 18 ++++-
+ .../src/pages/campaigns/SelectChannel.vue     | 72 +++++++++++++------
+ 3 files changed, 72 insertions(+), 25 deletions(-)
+
+diff --git a/new_saas/frontend/src/components/ui/FilterBar.vue b/new_saas/frontend/src/components/ui/FilterBar.vue
+index f4a3094e..64d0e24e 100644
+--- a/new_saas/frontend/src/components/ui/FilterBar.vue
++++ b/new_saas/frontend/src/components/ui/FilterBar.vue
+@@ -45,7 +45,7 @@ defineEmits<{
+   border: 1px solid var(--bc-gray, #e4e8ef);
+   border-radius: 8px;
+   padding: 0 0.75rem;
+-  flex: 1;
++  flex: 1 1 220px;
+   min-width: 200px;
+   transition: all 0.2s;
+ }
+@@ -82,6 +82,11 @@ defineEmits<{
+   border-color: var(--bc-gray);
+   background-color: var(--bc-white, #fff);
+   min-width: 140px;
++  /* Bootstrap define form-select com width:100%, que dentro de flex+wrap empurra
++     cada select para uma linha inteira. Limitamos para o select crescer só até
++     o conteúdo natural — assim ficam lado a lado com o search. */
++  width: auto;
++  flex: 0 1 auto;
+ }
+ .bc-filter-actions {
+   margin-left: auto;
+diff --git a/new_saas/frontend/src/pages/campaigns/Create.vue b/new_saas/frontend/src/pages/campaigns/Create.vue
+index 0e4bd13f..5b28cf35 100644
+--- a/new_saas/frontend/src/pages/campaigns/Create.vue
++++ b/new_saas/frontend/src/pages/campaigns/Create.vue
+@@ -53,8 +53,8 @@
+ 
+           <!-- Step 1: Identity + Content -->
+           <div v-show="currentStep === 1">
+-            <!-- Hero: Campaign name -->
+-            <div class="text-center py-4 mb-4">
++            <!-- Hero: Campaign name (pré-criação — pega a tela inteira para focar no nome) -->
++            <div v-if="!campaignId" class="text-center py-4 mb-4">
+               <div class="mb-3">
+                 <div style="width:56px;height:56px;border-radius:14px;background:var(--bc-gray-soft);display:inline-flex;align-items:center;justify-content:center">
+                   <i :class="`ti ${channelIcon}`" style="font-size:1.5rem;color:var(--bc-primary)"></i>
+@@ -73,12 +73,24 @@
+               </div>
+             </div>
+ 
++            <!-- Compact header: pós-criação — nome editável inline, libera espaço pro briefing -->
++            <div v-else class="d-flex align-items-center gap-2 mb-4 flex-wrap">
++              <span class="badge" style="background:var(--bc-gray-soft);color:var(--bc-text-muted);font-size:0.7rem;padding:0.35em 0.75em;border-radius:9999px">01</span>
++              <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.05rem;margin:0">Identidade</h3>
++              <input type="text" class="form-control form-control-sm"
++                v-model="form.name"
++                @blur="onSaveField('name', form.name)"
++                @keydown.enter.prevent="(e) => (e.target as HTMLInputElement).blur()"
++                aria-label="Nome da campanha"
++                style="max-width:320px;background:var(--bc-gray-soft);border:none;font-weight:600">
++              <span class="badge" style="background:var(--bc-primary-subtle);color:var(--bc-primary);font-size:0.68rem;border-radius:9999px">CANAL {{ form.type.toUpperCase() }}</span>
++            </div>
++
+             <!-- Content section (below name) -->
+             <div v-if="campaignId" class="mt-2">
+               <div class="d-flex align-items-center gap-2 mb-3">
+                 <span class="badge" style="background:var(--bc-gray-soft);color:var(--bc-text-muted);font-size:0.7rem;padding:0.35em 0.75em;border-radius:9999px">02</span>
+                 <h3 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:1.1rem;margin:0">Detalhes do Briefing</h3>
+-                <span class="badge" style="background:var(--bc-primary-subtle);color:var(--bc-primary);font-size:0.68rem;border-radius:9999px">CANAL {{ form.type.toUpperCase() }}</span>
+               </div>
+               <Step2WhatsApp
+                 v-if="form.type === 'whatsapp'"
+diff --git a/new_saas/frontend/src/pages/campaigns/SelectChannel.vue b/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
+index 95d7a863..2ca9e0a3 100644
+--- a/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
++++ b/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
+@@ -43,21 +43,23 @@
+              class="sc-card sc-card--pending"
+              aria-disabled="true"
+              tabindex="-1">
+-          <div class="sc-card__icon" :style="{ background: ch.bgSolid, opacity: 0.5 }">
+-            <i :class="`ti ${ch.icon}`" :style="{ color: ch.color, fontSize: '1.5rem', opacity: 0.6 }"></i>
++          <div class="sc-card__icon sc-card__icon--muted" :style="{ background: ch.bgSolid }">
++            <i :class="`ti ${ch.icon}`" :style="{ color: ch.color, fontSize: '1.5rem' }"></i>
+           </div>
+-          <h3 class="sc-card__name" style="opacity:.55">{{ ch.label }}</h3>
+-          <p class="sc-card__desc" style="opacity:.5">{{ ch.desc }}</p>
++          <h3 class="sc-card__name sc-card__name--muted">{{ ch.label }}</h3>
++          <p class="sc-card__desc sc-card__desc--muted">{{ ch.desc }}</p>
+           <span class="sc-badge sc-badge--pending">
+             <span class="sc-badge__dot sc-badge__dot--orange"></span>
+             Configuração Necessária
+           </span>
+-          <button v-if="configUrl(ch.id)" class="btn btn-sm btn-outline-primary mt-3" style="border-radius:8px;font-size:.78rem" @click.stop="$router.push(configUrl(ch.id)!)">
+-            <i class="ti ti-settings me-1"></i> Configurar
+-          </button>
+-          <div v-else class="mt-3 small text-muted" style="font-size:.78rem">
+-            <i class="ti ti-info-circle me-1"></i>
+-            Configuração disponível com o administrador.
++          <div class="sc-card__upgrade">
++            <button v-if="configUrl(ch.id)" class="btn btn-sm btn-outline-primary sc-card__upgrade-btn" @click.stop="$router.push(configUrl(ch.id)!)">
++              <i class="ti ti-settings me-1"></i> Configurar
++            </button>
++            <span v-else class="sc-card__upgrade-label">
++              <i class="ti ti-info-circle me-1"></i>
++              Configuração disponível com o administrador.
++            </span>
+           </div>
+         </div>
+ 
+@@ -67,17 +69,17 @@
+              aria-disabled="true"
+              tabindex="-1">
+           <div class="sc-card__lock-icon"><i class="ti ti-lock" style="font-size:.7rem"></i></div>
+-          <div class="sc-card__icon" :style="{ background: ch.bgSolid, opacity: 0.2 }">
+-            <i :class="`ti ${ch.icon}`" :style="{ color: ch.color, fontSize: '1.5rem', opacity: 0.35 }"></i>
++          <div class="sc-card__icon sc-card__icon--muted" :style="{ background: ch.bgSolid }">
++            <i :class="`ti ${ch.icon}`" :style="{ color: ch.color, fontSize: '1.5rem' }"></i>
+           </div>
+-          <h3 class="sc-card__name" style="opacity:.3">{{ ch.label }}</h3>
+-          <p class="sc-card__desc" style="opacity:.3">{{ ch.desc }}</p>
++          <h3 class="sc-card__name sc-card__name--muted">{{ ch.label }}</h3>
++          <p class="sc-card__desc sc-card__desc--muted">{{ ch.desc }}</p>
+           <span class="sc-badge sc-badge--gray">
+             Pendente
+           </span>
+-          <div class="mt-3 d-flex align-items-center gap-2">
+-            <span style="font-size:.72rem;color:var(--bc-text-muted);opacity:.6">Disponível no plano Starter+</span>
+-            <button class="btn btn-sm btn-primary" style="border-radius:8px;font-size:.72rem;padding:.2rem .6rem" @click.stop="$router.push('/settings/plans')">
++          <div class="sc-card__upgrade">
++            <span class="sc-card__upgrade-label">Disponível no plano Starter+</span>
++            <button class="btn btn-sm btn-primary sc-card__upgrade-btn" @click.stop="$router.push('/settings/plans')">
+               Upgrade
+             </button>
+           </div>
+@@ -256,16 +258,44 @@ onMounted(loadChannels)
+   outline-offset: 2px;
+ }
+ 
+-/* Pending */
++/* Pending — atenua o conteúdo sem usar opacity no card (multiplica e some) */
+ .sc-card--pending {
+   cursor: default;
+-  opacity: 0.75;
++  background: var(--bc-gray);
++  filter: saturate(0.7);
+ }
+ 
+-/* Locked */
++/* Locked — idem; texto fica legível, badge/lock indicam estado */
+ .sc-card--locked {
+   cursor: default;
+-  opacity: 0.55;
++  background: var(--bc-gray);
++  filter: saturate(0.5);
++}
++
++/* Versões "muted" dos elementos do card, sem multiplicar opacity */
++.sc-card__icon--muted { opacity: 0.6; }
++.sc-card__name--muted { color: var(--bc-text-muted); }
++.sc-card__desc--muted { color: var(--bc-text-muted); opacity: 0.75; }
++
++/* Bloco de Upgrade / Configurar — empilhado e centralizado dentro do card */
++.sc-card__upgrade {
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  gap: 0.5rem;
++  margin-top: 0.75rem;
++  width: 100%;
++}
++.sc-card__upgrade-label {
++  font-size: 0.72rem;
++  color: var(--bc-text-muted);
++  text-align: center;
++  line-height: 1.4;
++}
++.sc-card__upgrade-btn {
++  border-radius: 8px;
++  font-size: 0.78rem;
++  padding: 0.3rem 0.85rem;
+ }
+ 
+ /* ─── Icon square ─── */
+-- 
+2.48.1.windows.1
+

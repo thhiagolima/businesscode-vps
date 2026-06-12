@@ -1,0 +1,15 @@
+[
+  {
+    "segmento": "clinicas",
+    "slug": "clinicas",
+    "title": "WhatsApp para Clínicas e Consultórios",
+    "description": "Como clínicas usam WhatsApp para confirmar consultas, reduzir faltas e atender pacientes.",
+    "body": "Clínicas e consultórios perdem receita com faltas não comunicadas (no-show) e gastam horas por semana em confirmações manuais por telefone. Com a BusinessCode, a clínica automatiza todo o ciclo de comunicação com o paciente via WhatsApp: um lembrete é enviado automaticamente 48 horas antes da consulta, o paciente confirma ou cancela com uma resposta simples, e o sistema reagenda automaticamente caso haja cancelamento, consultando a agenda disponível. O chatbot responde dúvidas frequentes — endereço, horário de funcionamento, convênios aceitos — fora do horário comercial, sem intervenção da recepção. Quando o paciente responde algo que exige atenção humana, o atendimento é transferido para a recepcionista com o histórico completo da conversa. Mensagens transacionais como lembrete de consulta, aviso de resultado de exame pronto ou orientações pós-procedimento utilizam templates aprovados pelo WhatsApp, garantindo entregabilidade. Clínicas que implantaram esse fluxo relatam redução de 30% a 50% no índice de no-show em 60 dias. Um ponto crítico: dados de saúde são sensíveis e sujeitos à LGPD. A BusinessCode permite restringir quais operadores têm acesso a quais conversas, define retenção de histórico conforme política interna e mantém log auditável de todas as interações.",
+    "uniqueFacts": [
+      "Lembretes automáticos reduzem no-show em até 50%",
+      "Templates transacionais aprovados garantem entregabilidade",
+      "Controle de acesso por operador atende requisitos da LGPD"
+    ],
+    "related": []
+  }
+]

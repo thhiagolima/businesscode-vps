@@ -1,0 +1,117 @@
+<h2>Import CSV — Redesign</h2>
+<p class="subtitle">Hoje o modal não tem preview, validação nem progresso. Qual abordagem?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Wizard 3 etapas no Modal</h3>
+      <p>Upload → Preview/Mapping → Importando. Etapa 1: drag-drop + template download. Etapa 2: preview das 5 primeiras linhas com mapping de colunas. Etapa 3: barra de progresso com polling.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:0;background:#00000040;border-radius:8px">
+          <div style="background:#fff;border-radius:8px;margin:16px auto;padding:20px;max-width:520px">
+            <!-- Steps -->
+            <div style="display:flex;justify-content:center;gap:24px;margin-bottom:20px;font-size:12px">
+              <div style="color:#16a34a;font-weight:600">✓ Upload</div>
+              <div style="color:#0064ff;font-weight:600">② Preview</div>
+              <div style="color:#999">③ Importando</div>
+            </div>
+            <!-- Preview table -->
+            <div style="font-size:12px;margin-bottom:12px;color:#666">
+              <strong>contatos_premium.csv</strong> — 2.340 linhas detectadas
+            </div>
+            <div style="overflow-x:auto;margin-bottom:12px">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:400px">
+                <thead>
+                  <tr style="background:#f1f3f5">
+                    <th style="padding:6px 8px;text-align:left;border-bottom:2px solid #0064ff">
+                      <select style="font-size:11px;border:1px solid #0064ff;border-radius:4px;padding:2px 4px;background:#eff6ff;color:#0064ff;font-weight:600">
+                        <option selected>📱 Telefone</option>
+                      </select>
+                    </th>
+                    <th style="padding:6px 8px;text-align:left;border-bottom:2px solid #0064ff">
+                      <select style="font-size:11px;border:1px solid #0064ff;border-radius:4px;padding:2px 4px;background:#eff6ff;color:#0064ff;font-weight:600">
+                        <option selected>👤 Nome</option>
+                      </select>
+                    </th>
+                    <th style="padding:6px 8px;text-align:left;border-bottom:2px solid #0064ff">
+                      <select style="font-size:11px;border:1px solid #0064ff;border-radius:4px;padding:2px 4px;background:#eff6ff;color:#0064ff;font-weight:600">
+                        <option selected>📧 Email</option>
+                      </select>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-top:1px solid #eee">
+                    <td style="padding:6px 8px">+5511999991234</td>
+                    <td style="padding:6px 8px">João Silva</td>
+                    <td style="padding:6px 8px">joao@email.com</td>
+                  </tr>
+                  <tr style="border-top:1px solid #eee">
+                    <td style="padding:6px 8px">+5521988885678</td>
+                    <td style="padding:6px 8px">Maria Santos</td>
+                    <td style="padding:6px 8px">maria@email.com</td>
+                  </tr>
+                  <tr style="border-top:1px solid #eee">
+                    <td style="padding:6px 8px">+5531977779012</td>
+                    <td style="padding:6px 8px">Carlos Oliveira</td>
+                    <td style="padding:6px 8px">carlos@email.com</td>
+                  </tr>
+                  <tr style="border-top:1px solid #eee;color:#999">
+                    <td colspan="3" style="padding:6px 8px;text-align:center;font-style:italic">... mais 2.337 linhas</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px;font-size:11px;text-align:center">
+                <div style="font-weight:600;color:#16a34a">2.318</div>
+                <div style="color:#666">válidos</div>
+              </div>
+              <div style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px;font-size:11px;text-align:center">
+                <div style="font-weight:600;color:#dc2626">22</div>
+                <div style="color:#666">inválidos</div>
+              </div>
+              <div style="flex:1;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px;font-size:11px;text-align:center">
+                <div style="font-weight:600;color:#0064ff">5</div>
+                <div style="color:#666">duplicados</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button style="flex:1;padding:10px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">← Voltar</button>
+              <button style="flex:1;padding:10px;border:none;border-radius:6px;background:#0064ff;color:#fff;cursor:pointer;font-weight:600;font-size:13px">Importar 2.318 contatos →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Upload Direto + Status Card</h3>
+      <p>Modal simples: drag-drop com mapping fixo (phone, name, email). Após upload, modal fecha e aparece card de progresso no topo da página de contatos com polling em tempo real.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:16px;background:#f8f9fb">
+          <!-- Status card no topo -->
+          <div style="background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📤</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">Importando contatos_premium.csv</div>
+              <div style="background:#e5e7eb;border-radius:4px;height:6px;margin-top:6px;overflow:hidden">
+                <div style="background:#0064ff;height:100%;width:67%;border-radius:4px;transition:width 0.3s"></div>
+              </div>
+              <div style="font-size:11px;color:#666;margin-top:4px">1.568 de 2.340 processados · ~45s restantes</div>
+            </div>
+            <button style="border:none;background:none;color:#999;cursor:pointer;font-size:16px">✕</button>
+          </div>
+          <!-- Tabela de contatos por baixo -->
+          <div style="background:#fff;border-radius:8px;padding:12px;font-size:12px;color:#999;text-align:center">
+            Tabela de contatos continua visível por baixo...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

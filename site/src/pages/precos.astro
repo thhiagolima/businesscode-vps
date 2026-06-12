@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { faqJsonLd } from '../lib/seo';
+const faq = [
+  { question: 'Tem plano gratuito?', answer: 'Sim, é possível começar gratuitamente e pagar conforme o uso.' },
+  { question: 'A cobrança é em reais?', answer: 'Sim, todo o faturamento é em reais (BRL).' },
+];
+---
+<BaseLayout title="Preços — BusinessCode" description="Planos e preços da BusinessCode, faturamento em reais." jsonLd={faqJsonLd(faq)}>
+  <h1>Preços</h1>
+  <section>
+    {faq.map((f) => (<details><summary>{f.question}</summary><p>{f.answer}</p></details>))}
+  </section>
+</BaseLayout>

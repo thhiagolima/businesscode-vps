@@ -1,0 +1,15 @@
+[
+  {
+    "ferramenta": "rd-station",
+    "slug": "rd-station",
+    "title": "Integração BusinessCode + RD Station",
+    "description": "Como conectar a BusinessCode ao RD Station para disparar WhatsApp a partir de automações de marketing.",
+    "body": "A integração entre BusinessCode e RD Station conecta o marketing digital à mensageria multicanal: quando um lead avança em uma automação do RD Station, a BusinessCode dispara automaticamente uma mensagem de WhatsApp no momento mais relevante da jornada. Casos de uso comuns incluem: enviar uma mensagem de boas-vindas personalizada assim que o lead converte em uma landing page, lembrar de um webinar 1 hora antes, notificar o representante comercial quando um lead atinge pontuação de MQL, ou reengajar leads frios com oferta específica. A conexão técnica é feita via webhook: o RD Station chama um endpoint HTTPS da BusinessCode com os dados do lead (nome, telefone, estágio do funil, campos personalizados), e a plataforma seleciona o template de WhatsApp correspondente e dispara a mensagem. Não é necessário escrever código: o mapeamento entre campos do RD Station e variáveis do template é feito visualmente no painel da BusinessCode em menos de 10 minutos. Após o disparo, os eventos de entrega (entregue, lido, respondido, falhou) são enviados de volta ao RD Station via webhook reverso, atualizando automaticamente a pontuação e o estágio do lead e fechando o ciclo de mensuração de campanha. Isso permite que o time de marketing meça a influência do WhatsApp nas conversões sem precisar cruzar relatórios manualmente.",
+    "uniqueFacts": [
+      "Mapeamento de campos sem código em menos de 10 minutos",
+      "Status de entrega retorna ao RD Station fechando o ciclo de atribuição",
+      "Disparo por webhook HTTPS sem infraestrutura adicional"
+    ],
+    "related": []
+  }
+]

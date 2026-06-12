@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BusinessCode - Campaign Creation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#b3c5ff",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-surface": "#dee0ff",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "surface-container-lowest": "#080c25",
+                        "tertiary-fixed-dim": "#ffb59c",
+                        "surface-bright": "#343752",
+                        "on-secondary": "#002e6a",
+                        "surface-tint": "#b3c5ff",
+                        "surface-container-high": "#242842",
+                        "surface": "#0d112a",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#390c00",
+                        "inverse-primary": "#0054d8",
+                        "on-secondary-fixed": "#001a42",
+                        "secondary-fixed": "#d8e2ff",
+                        "inverse-on-surface": "#2b2f49",
+                        "on-surface-variant": "#c2c6d8",
+                        "error-container": "#93000a",
+                        "background": "#0d112a",
+                        "tertiary-fixed": "#ffdbd0",
+                        "secondary": "#adc6ff",
+                        "on-background": "#dee0ff",
+                        "on-secondary-container": "#e6ecff",
+                        "tertiary": "#ffb59c",
+                        "on-primary-container": "#f5f5ff",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "surface-variant": "#2f334e",
+                        "inverse-surface": "#dee0ff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#1a1e37",
+                        "outline": "#8c90a2",
+                        "on-primary-fixed": "#00174a",
+                        "primary-container": "#0064ff",
+                        "outline-variant": "#424656",
+                        "on-tertiary-container": "#fff4f0",
+                        "surface-container-highest": "#2f334e",
+                        "on-primary-fixed-variant": "#003ea6",
+                        "surface-container-low": "#161a33",
+                        "on-tertiary": "#5c1900",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#832700",
+                        "on-primary": "#002a76",
+                        "error": "#ffb4ab",
+                        "surface-dim": "#0d112a",
+                        "secondary-container": "#0566d9",
+                        "tertiary-container": "#ca4101"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0d112a;
+            color: #dee0ff;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(22, 27, 69, 0.6);
+            backdrop-filter: blur(12px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #161a33;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2f334e;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#161a33] dark:bg-[#161a33] flex flex-col py-6 z-50">
+<div class="px-6 mb-10">
+<h1 class="font-['Manrope'] font-black text-xl text-white tracking-tight">BusinessCode</h1>
+<p class="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Marketing Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-slate-400 hover:text-white transition-colors px-6 py-3 hover:bg-[#242842] transition-all group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center text-white bg-gradient-to-br from-[#0064ff] to-[#0054d8] rounded-lg mx-2 px-4 py-3 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3">campaign</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Campaigns</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors px-6 py-3 hover:bg-[#242842] transition-all group" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Contacts</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors px-6 py-3 hover:bg-[#242842] transition-all group" href="#">
+<span class="material-symbols-outlined mr-3">forum</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Conversations</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors px-6 py-3 hover:bg-[#242842] transition-all group" href="#">
+<span class="material-symbols-outlined mr-3">filter_alt</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Funnels</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors px-6 py-3 hover:bg-[#242842] transition-all group" href="#">
+<span class="material-symbols-outlined mr-3">smart_toy</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Chatbot</span>
+</a>
+</nav>
+<div class="mt-auto px-6 pt-6 border-t border-slate-700/30">
+<a class="flex items-center text-slate-400 hover:text-white transition-colors py-3 group" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-['Manrope'] font-bold tracking-tight">Settings</span>
+</a>
+<div class="flex items-center mt-4">
+<img alt="User Profile" class="w-8 h-8 rounded-full bg-surface-container-high" data-alt="close-up portrait of a professional business executive in a modern tech office environment with soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCns-KWSGSRaxApqqvuyAlCnwg3v0ug0P6y7rd_uxJztOc09J4g8FsNCttDOgCBO4nKpyTNVBKGUz5H8Zb4mETf_d0PxICFrHIGDSkd19AMW-y3smM8q16T7YSXO1dKX25U1HHVrs-ZObmf0vMyilR1UP_NFWwYZbFULRoWEQTt9VmSaGFZ1dwYR7xiRwocLxH5KzxLU8BCm7ZSaI03nAqt5CnEHleulgTdfIY_DxhFy4J0ydExMvRBFaIBWYXEpDlZQCt73HF2l4Y"/>
+<div class="ml-3">
+<p class="text-xs font-bold text-white">Alex Rivera</p>
+<p class="text-[10px] text-slate-500">Pro Plan</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 ml-64 p-8 lg:p-12">
+<!-- Header -->
+<header class="flex justify-between items-center mb-12">
+<div>
+<h2 class="font-headline text-4xl font-extrabold text-white tracking-tight">Campaign Creation</h2>
+<div class="flex items-center mt-3 space-x-2">
+<span class="text-xs font-bold text-primary px-2 py-0.5 bg-primary/10 rounded">STEP 3-4</span>
+<span class="text-sm text-slate-400">Finalizing Audience &amp; Timing</span>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-10 w-10 rounded-xl bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">help_outline</span>
+</div>
+</div>
+</header>
+<div class="grid grid-cols-12 gap-8">
+<!-- STEP 3: CONTACTS (LEFT/MAIN COLUMN) -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<section>
+<div class="flex items-center mb-6">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm mr-3">3</div>
+<h3 class="font-headline text-2xl font-bold text-white">Audience Selection</h3>
+</div>
+<!-- Tabs Container -->
+<div class="bg-surface-container-low rounded-xl p-1 flex mb-8">
+<button class="flex-1 py-3 px-4 rounded-lg bg-surface-container-high text-white font-semibold text-sm transition-all flex items-center justify-center">
+<span class="material-symbols-outlined mr-2 text-primary">list_alt</span>
+                            Select List
+                        </button>
+<button class="flex-1 py-3 px-4 rounded-lg text-slate-400 hover:text-white font-semibold text-sm transition-all flex items-center justify-center">
+<span class="material-symbols-outlined mr-2">upload_file</span>
+                            Upload CSV
+                        </button>
+<button class="flex-1 py-3 px-4 rounded-lg text-slate-400 hover:text-white font-semibold text-sm transition-all flex items-center justify-center">
+<span class="material-symbols-outlined mr-2">keyboard</span>
+                            Manual Input
+                        </button>
+</div>
+<!-- List Content -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Active List Card -->
+<div class="p-5 rounded-xl border-2 border-primary bg-primary/5 relative overflow-hidden group">
+<div class="absolute top-3 right-3 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-primary font-bold">check</span>
+</div>
+<h4 class="font-bold text-white mb-1">Q4 High Intent Leads</h4>
+<p class="text-xs text-slate-400 mb-4">Last updated 2 hours ago</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<span class="text-lg font-bold text-white">2,450</span>
+<span class="ml-2 text-[10px] text-green-400 font-bold uppercase tracking-tighter bg-green-400/10 px-2 py-0.5 rounded-full">Valid</span>
+</div>
+<div class="flex -space-x-2">
+<img alt="Contact 1" class="w-6 h-6 rounded-full border border-surface-container-low" data-alt="professional person portrait small avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQfL22Q8pL1FjRJysBoBsjDp7vUr4v_7se-9ZKs5Jh30fMn3cVMl5xwQw_WG2mTe5CNn38HqJ7-_P8kirra2zJ6qExnegBG3Y6j7zzGPc4Nvp9w2Vy0aJ1ISUztntkV281YLFRTsmXCVLsgMCV1LwPiT1pfJQG-1SIUdpkJEXqHF3rEzvaNY3OVvba_5N-w_hl_zoFJIcx5vGxAe24fhvkT7fCXz_BC3GGgryobfticf0POR0rDsH9BItPcv7_O9BZWO5_d4F1Sv4"/>
+<img alt="Contact 2" class="w-6 h-6 rounded-full border border-surface-container-low" data-alt="professional person portrait small avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUDRmvLUzTvRlLokm5LVmZgLoJC6x2UWrRK4f2TKq0oyR5w4MrEnghAXF8KNjFor8Rwc-mhaR6KNXJLtcXrvZCAW9w4DndU3iIaYn2T63Zhb7CdAX5G9L-q9QHCLHVJZew4BWBwsvXy8tpZmDC2cgryTM8wwJiChH4TDSrs73YElQAZgKFpiqAJisAkSD7wFXyLn4X3edL9pBvQtnCF1nervdDYZXrQtjfauAaQhxtgeIlGE0uBXc5_razbmDlMeOHBV7y-CAtxJw"/>
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-surface-container-low flex items-center justify-center text-[8px] font-bold">+2.4k</div>
+</div>
+</div>
+</div>
+<!-- Secondary List Card -->
+<div class="p-5 rounded-xl bg-surface-container-high border border-transparent hover:border-slate-700 transition-all cursor-pointer">
+<h4 class="font-bold text-slate-200 mb-1">Early Access Users</h4>
+<p class="text-xs text-slate-500 mb-4">Static List • 1,120 total</p>
+<div class="flex items-center justify-between">
+<span class="text-lg font-bold text-slate-400">1,120</span>
+<span class="material-symbols-outlined text-slate-600">add_circle</span>
+</div>
+</div>
+</div>
+<!-- Warning Message -->
+<div class="mt-6 p-4 rounded-xl bg-error-container/20 border border-error-container/30 flex items-start">
+<span class="material-symbols-outlined text-error mr-3">warning</span>
+<div>
+<p class="text-sm font-bold text-error">Invalid Contacts Detected</p>
+<p class="text-xs text-slate-400 mt-1">12 contacts in "Q4 High Intent Leads" have missing or malformed email addresses. They will be automatically excluded from this campaign.</p>
+</div>
+<button class="ml-auto text-xs font-bold text-primary hover:underline">View List</button>
+</div>
+</section>
+<hr class="border-slate-800/50"/>
+<!-- STEP 4: SCHEDULING -->
+<section>
+<div class="flex items-center mb-6">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm mr-3">4</div>
+<h3 class="font-headline text-2xl font-bold text-white">Campaign Timing</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Option 1: Send Now -->
+<div class="glass-card p-6 rounded-xl border border-outline-variant/30 hover:border-primary/50 transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center mb-4 group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-on-primary">rocket_launch</span>
+</div>
+<h4 class="font-bold text-white text-lg mb-2">Send now</h4>
+<p class="text-sm text-slate-400">Distribute your campaign immediately to all 2,450 valid contacts.</p>
+</div>
+<!-- Option 2: Schedule (Active) -->
+<div class="glass-card p-6 rounded-xl border-2 border-primary bg-primary/5 transition-all cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-primary flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-on-primary">calendar_month</span>
+</div>
+<h4 class="font-bold text-white text-lg mb-2">Schedule</h4>
+<p class="text-sm text-slate-400 mb-6">Choose a specific date and time for automated delivery.</p>
+<!-- Date Picker Mock -->
+<div class="space-y-4">
+<div>
+<label class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 block">Delivery Date &amp; Time</label>
+<div class="flex items-center space-x-3">
+<div class="flex-1 bg-surface-container-highest rounded-lg p-3 flex items-center">
+<span class="material-symbols-outlined text-xs text-primary mr-2">event</span>
+<span class="text-sm font-medium text-white">Nov 24, 2023</span>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-lg p-3 flex items-center">
+<span class="material-symbols-outlined text-xs text-primary mr-2">schedule</span>
+<span class="text-sm font-medium text-white">09:30 AM</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg flex items-center justify-between">
+<span class="text-xs text-slate-400">Timezone</span>
+<span class="text-xs font-bold text-slate-200">UTC -05:00 (EST)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN: SUMMARY & COST -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Cost Card -->
+<div class="bg-[#0064ff]/10 rounded-2xl p-8 border border-primary/20 sticky top-8">
+<h4 class="font-headline text-lg font-bold text-white mb-6">Campaign Summary</h4>
+<div class="space-y-6">
+<div class="flex justify-between items-end pb-4 border-b border-white/5">
+<div>
+<p class="text-xs font-medium text-slate-400 mb-1">Total Audience</p>
+<p class="text-3xl font-['Manrope'] font-extrabold text-white">2,450</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium text-slate-500">Credits required</p>
+<p class="text-lg font-bold text-primary">2,450 <span class="text-[10px] uppercase">pts</span></p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Available Credits</span>
+<span class="text-white font-bold">12,840</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-400">Estimated Cost</span>
+<span class="text-white font-bold">$0.00 <span class="text-[10px] text-slate-500">(Included)</span></span>
+</div>
+<div class="pt-2">
+<div class="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/5"></div>
+</div>
+<p class="text-[10px] text-slate-500 mt-2">Using 19% of your monthly credit allowance.</p>
+</div>
+</div>
+<div class="pt-4 space-y-3">
+<button class="w-full py-4 bg-gradient-to-br from-[#0064ff] to-[#0054d8] text-white font-bold rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center">
+                                Launch Campaign
+                                <span class="material-symbols-outlined ml-2 text-sm">send</span>
+</button>
+<button class="w-full py-3 bg-surface-container-high text-slate-300 font-bold rounded-xl hover:text-white transition-colors">
+                                Save as Draft
+                            </button>
+</div>
+<div class="p-4 bg-surface-container-low rounded-xl">
+<p class="text-xs text-slate-400 italic">"This campaign will be queued and sent on Friday at 9:30 AM EST. You can cancel or edit it any time before then."</p>
+</div>
+</div>
+</div>
+<!-- Preview Card -->
+<div class="bg-surface-container-low rounded-2xl p-6 overflow-hidden">
+<p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">Mobile Preview</p>
+<div class="w-full aspect-[9/16] bg-surface rounded-xl border border-slate-800 p-4 relative">
+<div class="w-1/3 h-1 bg-slate-800 rounded-full mx-auto mb-4"></div>
+<div class="flex items-center space-x-2 mb-4">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-primary">notifications_active</span>
+</div>
+<div class="flex-1 h-2 bg-slate-800 rounded-full"></div>
+</div>
+<div class="space-y-2">
+<div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+<div class="h-4 bg-surface-container-highest rounded w-1/2"></div>
+<div class="h-24 bg-surface-container-low rounded-lg w-full mt-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-700 text-4xl">image</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4 right-4 h-10 bg-primary/20 rounded-lg border border-primary/30 flex items-center justify-center">
+<div class="w-1/2 h-2 bg-primary/40 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0d112a]/90 backdrop-blur-xl flex items-center justify-around px-4 z-50">
+<button class="flex flex-col items-center text-slate-400">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="text-[10px] mt-1 font-bold">Campaign</span>
+</button>
+<button class="flex flex-col items-center text-slate-400">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] mt-1">Contacts</span>
+</button>
+<button class="flex flex-col items-center text-slate-400">
+<span class="material-symbols-outlined">forum</span>
+<span class="text-[10px] mt-1">Chat</span>
+</button>
+</nav>
+</body></html>

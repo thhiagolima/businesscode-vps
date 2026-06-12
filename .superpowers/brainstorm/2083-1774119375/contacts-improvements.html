@@ -1,0 +1,105 @@
+<h2>Página de Contatos — Melhorias</h2>
+<p class="subtitle">Hoje mostra apenas tabela simples sem filtro por lista, sem paginação e sem ações em lote. O que faz sentido?</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="sidebar-lists" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Sidebar de Listas</h3>
+      <p>Painel lateral esquerdo com todas as listas do tenant. Click para filtrar a tabela. Mostra contagem por lista. "Todas" no topo. Permite criar/renomear/deletar listas inline.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:12px;background:#f8f9fb;display:flex;gap:12px">
+          <div style="width:180px;flex-shrink:0;background:#fff;border-radius:8px;padding:10px;font-size:12px">
+            <div style="font-weight:600;margin-bottom:8px;color:#333;font-size:13px">Listas</div>
+            <div style="background:#eff6ff;color:#0064ff;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-weight:600;display:flex;justify-content:space-between;cursor:pointer">
+              <span>Todas</span><span>3.386</span>
+            </div>
+            <div style="padding:6px 8px;border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between;cursor:pointer;color:#555" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+              <span>Clientes Premium</span><span style="color:#999">2.340</span>
+            </div>
+            <div style="padding:6px 8px;border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between;cursor:pointer;color:#555" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+              <span>Newsletter</span><span style="color:#999">890</span>
+            </div>
+            <div style="padding:6px 8px;border-radius:4px;margin-bottom:4px;display:flex;justify-content:space-between;cursor:pointer;color:#555" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+              <span>Leads Quentes</span><span style="color:#999">156</span>
+            </div>
+            <div style="padding:6px 8px;color:#0064ff;cursor:pointer;font-size:11px;margin-top:4px">+ Nova lista</div>
+          </div>
+          <div style="flex:1;font-size:12px;color:#999;background:#fff;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center">
+            Tabela de contatos →
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="batch-actions" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Seleção + Ações em Lote</h3>
+      <p>Checkbox em cada linha. Ao selecionar 1+, barra de ações aparece no topo: "Mover para lista", "Mudar status", "Deletar". Select-all no header.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:12px;background:#f8f9fb">
+          <!-- Barra de ações -->
+          <div style="background:#0064ff;border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <span style="color:#fff;font-size:12px;font-weight:600">3 selecionados</span>
+            <button style="border:1px solid rgba(255,255,255,0.3);background:none;color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer">📋 Mover</button>
+            <button style="border:1px solid rgba(255,255,255,0.3);background:none;color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer">🔄 Status</button>
+            <button style="border:1px solid rgba(255,255,255,0.3);background:none;color:#fca5a5;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer">🗑 Deletar</button>
+            <span style="margin-left:auto;color:rgba(255,255,255,0.6);cursor:pointer;font-size:14px">✕</span>
+          </div>
+          <!-- Mini tabela -->
+          <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-size:12px">
+            <tr style="border-bottom:1px solid #eee">
+              <td style="padding:8px;width:30px"><div style="width:14px;height:14px;border:2px solid #0064ff;border-radius:3px;background:#0064ff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px">✓</div></td>
+              <td style="padding:8px;font-weight:600">João Silva</td>
+              <td style="padding:8px;color:#666">+5511999991234</td>
+              <td style="padding:8px"><span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:3px;font-size:10px">ativo</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid #eee">
+              <td style="padding:8px"><div style="width:14px;height:14px;border:2px solid #0064ff;border-radius:3px;background:#0064ff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px">✓</div></td>
+              <td style="padding:8px;font-weight:600">Maria Santos</td>
+              <td style="padding:8px;color:#666">+5521988885678</td>
+              <td style="padding:8px"><span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:3px;font-size:10px">ativo</span></td>
+            </tr>
+            <tr>
+              <td style="padding:8px"><div style="width:14px;height:14px;border:2px solid #ddd;border-radius:3px"></div></td>
+              <td style="padding:8px">Carlos Oliveira</td>
+              <td style="padding:8px;color:#666">+5531977779012</td>
+              <td style="padding:8px"><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:3px;font-size:10px">inválido</span></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="pagination-filters" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Paginação + Filtros na Tabela</h3>
+      <p>Filtros por status (ativo/bloqueado/inválido), busca por nome/telefone/email. Paginação no rodapé com "20 por página". Contagem total visível.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:12px;background:#f8f9fb">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px" placeholder="🔍 Buscar nome, telefone, email...">
+            <select style="padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;background:#fff">
+              <option>Todos os status</option>
+            </select>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#666;margin-top:8px;padding:4px 0">
+            <span>3.386 contatos · Página 1 de 170</span>
+            <div style="display:flex;gap:3px">
+              <button style="padding:3px 8px;border:1px solid #ddd;border-radius:3px;background:#fff;font-size:11px;color:#999">‹</button>
+              <button style="padding:3px 8px;border:1px solid #0064ff;border-radius:3px;background:#0064ff;color:#fff;font-size:11px">1</button>
+              <button style="padding:3px 8px;border:1px solid #ddd;border-radius:3px;background:#fff;font-size:11px">2</button>
+              <button style="padding:3px 8px;border:1px solid #ddd;border-radius:3px;background:#fff;font-size:11px">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">⬆️ Pode selecionar <strong>múltiplas opções</strong> — são complementares!</p>

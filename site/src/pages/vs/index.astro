@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const entries = (await getCollection('comparativos')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+<BaseLayout title="Comparativos — BusinessCode" description="BusinessCode comparado a outras plataformas de mensageria.">
+  <h1>Comparativos</h1>
+  <ul>
+    {entries.map((e) => (
+      <li><a href={`/vs/${e.data.slug}`}>{e.data.title}</a> — {e.data.description}</li>
+    ))}
+  </ul>
+</BaseLayout>

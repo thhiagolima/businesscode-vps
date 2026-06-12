@@ -1,0 +1,15 @@
+[
+  {
+    "concorrente": "twilio",
+    "slug": "twilio",
+    "title": "BusinessCode vs Twilio",
+    "description": "Comparativo de preço, suporte em português e facilidade entre BusinessCode e Twilio.",
+    "body": "BusinessCode e Twilio resolvem mensageria em escala, mas com focos e propósitos bastante diferentes. A BusinessCode é construída para o mercado brasileiro: suporte em português durante horário comercial, faturamento em reais sem variação cambial, e todos os canais — WhatsApp, SMS, voz e e-mail — gerenciados num único painel via infraestrutura Infobip. Isso significa que uma equipe de marketing ou atendimento pode criar e disparar campanhas, acompanhar relatórios e responder clientes sem depender de time técnico. A Twilio é uma plataforma global de APIs de comunicação com altíssima flexibilidade para desenvolvedores: suporta dezenas de canais, tem SDKs em várias linguagens e é referência para quem precisa de telefonia programável avançada. No entanto, cobra em dólar, exige maior esforço de configuração e não oferece suporte nativo em português. Para uma empresa brasileira que quer subir campanhas de WhatsApp rapidamente, sem contratar engenheiros dedicados, a BusinessCode reduz meses de integração para dias. Para startups globais ou equipes de engenharia que querem primitivas de baixo nível e máxima personalização, a Twilio é a escolha mais flexível. O custo total de propriedade também difere: a BusinessCode já embute gestão de templates, aprovação de mensagens e relatórios consolidados.",
+    "uniqueFacts": [
+      "Faturamento em BRL sem exposição cambial",
+      "Suporte em português no horário comercial brasileiro",
+      "Painel único multicanal sem integração adicional"
+    ],
+    "related": []
+  }
+]

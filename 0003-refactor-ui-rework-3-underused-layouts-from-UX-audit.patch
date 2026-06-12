@@ -1,0 +1,608 @@
+From 9eb1a45b096ebe59963d3d98af4f55937d9c7e02 Mon Sep 17 00:00:00 2001
+From: admbusiness <admbusiness@35-30-168-184.host.secureserver.net>
+Date: Sat, 30 May 2026 11:05:00 -0300
+Subject: [PATCH 3/6] refactor(ui): rework 3 underused layouts from UX audit
+ (round 3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+3 telas que o usuário identificou com aproveitamento de espaço ruim, conteúdo
+quebrado ou estados vazios pobres. Refatoração visual sem mexer em lógica.
+
+1) SelectChannel.vue — grid de canais 2x2 fixo em 720px deixava metade da tela
+   vazia em desktop. Trocado para grid responsivo:
+   - auto-fit minmax(260px, 1fr) por padrão, 4 colunas em ≥1200px, 1 coluna ≤640px
+   - cards ganharam min-height:220px + height:100% para alinhar a base
+   - footer e grid ocupam 100% do container (eliminado max-width:720px)
+
+2) Step2Content/AiMode.vue — coluna direita do briefing era só um ícone
+   sparkles + texto "Preencha o briefing e gere variações". 60% da viewport
+   desperdiçada quando o estado mais frequente é "ainda não gerou nada".
+   Substituído por dois blocos lado a lado (md+ breakpoint):
+   - Preview SMS ao vivo em mockup de dispositivo (atualiza conforme
+     briefing.product/audience/benefit/cta vão sendo preenchidos),
+     com contador 0/160 quando válido
+   - "Como a IA gera suas mensagens": 3 passos numerados + dica destacada
+     incentivando briefing específico
+
+3) Funnels Editor — 3 problemas:
+   a) FunnelToolbar.vue usava emoji 📨⏱🔀🏷👤🤖 como ícones (viola
+      no-emoji-icons) + background hardcoded #dcfce7 verde-claro de
+      light-mode num app dark (texto preto sumia). Refeito com:
+      - ícones tabler (ti-message/clock/arrows-split/tag/user-check/robot)
+      - background semi-transparente da cor do bloco (rgba)
+      - layout vertical icon + label + hover/focus states acessíveis
+   b) MiniMap do VueFlow sem props → renderizava com tamanho/cores default
+      conflitando com o dark theme. Adicionados width=160, height=100,
+      maskColor, nodeColor + position bottom-right; Controls movido para
+      bottom-left pra não competir; Background ganhou pattern-color escuro
+   c) NodePropertiesPanel.vue: empty state era texto genérico "Clique num
+      bloco para editar" sem contexto. Refeito com ícone + título +
+      descrição + 4 passos numerados explicando o fluxo (arrastar →
+      conectar → configurar → ativar)
+
+Validação:
+- vite build passa (17.29s)
+- Screenshots FIX-select-channel-v2.jpeg, FIX-create-step1-v2.jpeg,
+  FIX-funnels-editor-v2.jpeg confirmam visualmente os 3 refactors.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ .../campaigns/steps/Step2Content/AiMode.vue   | 212 +++++++++++++++++-
+ .../src/components/funnels/FunnelToolbar.vue  | 103 ++++++++-
+ .../funnels/NodePropertiesPanel.vue           |  93 +++++++-
+ .../src/pages/campaigns/SelectChannel.vue     |  20 +-
+ .../frontend/src/pages/funnels/Editor.vue     |  16 +-
+ 5 files changed, 415 insertions(+), 29 deletions(-)
+
+diff --git a/new_saas/frontend/src/components/campaigns/steps/Step2Content/AiMode.vue b/new_saas/frontend/src/components/campaigns/steps/Step2Content/AiMode.vue
+index c335d716..4f9e283f 100644
+--- a/new_saas/frontend/src/components/campaigns/steps/Step2Content/AiMode.vue
++++ b/new_saas/frontend/src/components/campaigns/steps/Step2Content/AiMode.vue
+@@ -103,14 +103,57 @@
+ 
+     <!-- DIREITA: Variações + Histórico (60%) -->
+     <div class="col-lg-7">
+-      <!-- Estado vazio -->
+-      <div v-if="!variations.length && !hasHistory" class="card">
+-        <div class="card-body text-center py-5">
+-          <div class="mb-3">
+-            <i class="ti ti-sparkles" style="font-size:3rem;color:#ddd"></i>
++      <!-- Estado vazio: preview SMS + dicas -->
++      <div v-if="!variations.length && !hasHistory" class="ai-empty">
++        <!-- Preview do que será gerado (atualiza ao vivo conforme briefing) -->
++        <div class="ai-empty__preview">
++          <div class="ai-empty__device">
++            <div class="ai-empty__device-notch"></div>
++            <div class="ai-empty__bubble-header">
++              <i class="ti ti-message-circle" style="font-size:0.9rem"></i>
++              <span>Pré-visualização — {{ channelLabel }}</span>
++            </div>
++            <div class="ai-empty__bubble" :class="{ 'is-placeholder': !briefingValid }">
++              <p class="mb-0">{{ previewMessage }}</p>
++              <div v-if="previewCharCount" class="ai-empty__chars">
++                <span :class="{ 'text-warning': previewCharCount > 160 }">{{ previewCharCount }}/160</span>
++              </div>
++            </div>
++          </div>
++        </div>
++
++        <!-- Dicas / Como funciona -->
++        <div class="ai-empty__tips">
++          <h4 class="ai-empty__tips-title">
++            <i class="ti ti-sparkles me-2 text-primary"></i>Como a IA gera suas mensagens
++          </h4>
++          <ol class="ai-empty__steps">
++            <li>
++              <span class="ai-empty__step-num">1</span>
++              <div>
++                <strong>Você descreve</strong>
++                <span class="text-muted">produto, público, benefício e chamada para ação</span>
++              </div>
++            </li>
++            <li>
++              <span class="ai-empty__step-num">2</span>
++              <div>
++                <strong>IA cria N versões</strong>
++                <span class="text-muted">com tons diferentes, otimizadas para o canal</span>
++              </div>
++            </li>
++            <li>
++              <span class="ai-empty__step-num">3</span>
++              <div>
++                <strong>Você escolhe a melhor</strong>
++                <span class="text-muted">e dispara — sem perder tempo escrevendo do zero</span>
++              </div>
++            </li>
++          </ol>
++          <div class="ai-empty__note">
++            <i class="ti ti-bulb"></i>
++            <span>Quanto mais específico o briefing, melhor o resultado. Quebra o público em "mães 30-45 anos" em vez de "geral".</span>
+           </div>
+-          <h3 class="text-muted">Preencha o briefing e gere variações</h3>
+-          <p class="text-muted">A IA criará mensagens personalizadas para sua campanha.</p>
+         </div>
+       </div>
+ 
+@@ -239,6 +282,31 @@ const briefingValid = computed(() =>
+   !!brief.value.product && !!brief.value.audience && !!brief.value.benefit && !!brief.value.cta
+ )
+ 
++const channelLabel = computed(() => {
++  const map: Record<string, string> = { sms: 'SMS', voice: 'Torpedo de Voz', email: 'Email', whatsapp: 'WhatsApp' }
++  return map[props.channel] ?? props.channel.toUpperCase()
++})
++
++// Pré-visualização ao vivo da mensagem. Usa o briefing já preenchido para mostrar
++// uma versão rascunho — quando vazio, mostra um exemplo placeholder.
++const previewMessage = computed(() => {
++  const b = brief.value
++  if (!b.product && !b.audience && !b.benefit && !b.cta) {
++    return 'Olá! Aproveite [benefício] em [produto]. [chamada para ação] → [link]'
++  }
++  const parts: string[] = []
++  if (b.audience) parts.push(`Olá! Para ${b.audience.toLowerCase()}:`)
++  else parts.push('Olá!')
++  if (b.product && b.benefit) parts.push(`${b.product} com ${b.benefit.toLowerCase()}.`)
++  else if (b.product) parts.push(`${b.product}.`)
++  else if (b.benefit) parts.push(`${b.benefit}.`)
++  if (b.cta) parts.push(b.cta + '.')
++  if (b.link) parts.push(b.link)
++  return parts.join(' ')
++})
++
++const previewCharCount = computed(() => briefingValid.value ? previewMessage.value.length : 0)
++
+ function handleGenerate() {
+   if (!brief.value.link?.trim()) {
+     showNoLinkWarning.value = true
+@@ -351,4 +419,134 @@ onMounted(() => { if (props.campaignId) loadSessions() })
+   background: #0064ff;
+   color: #fff;
+ }
++
++/* ─── Empty state preview (Step 1 Briefing direita) ─── */
++.ai-empty {
++  display: grid;
++  gap: 1.25rem;
++}
++@media (min-width: 992px) {
++  .ai-empty { grid-template-columns: minmax(280px, 360px) 1fr; }
++}
++
++.ai-empty__preview {
++  display: flex;
++  justify-content: center;
++}
++.ai-empty__device {
++  position: relative;
++  width: 100%;
++  max-width: 320px;
++  background: var(--bc-gray);
++  border-radius: 24px;
++  padding: 18px 14px 16px;
++  border: 1px solid var(--bc-outline);
++}
++.ai-empty__device-notch {
++  position: absolute;
++  top: 8px;
++  left: 50%;
++  transform: translateX(-50%);
++  width: 60px;
++  height: 5px;
++  border-radius: 9999px;
++  background: rgba(255,255,255,0.08);
++}
++.ai-empty__bubble-header {
++  display: flex;
++  align-items: center;
++  gap: 0.4rem;
++  font-size: 0.7rem;
++  color: var(--bc-text-muted);
++  text-transform: uppercase;
++  letter-spacing: 0.06em;
++  margin: 0.5rem 0 0.75rem;
++  font-weight: 600;
++}
++.ai-empty__bubble {
++  background: var(--bc-primary-subtle);
++  color: var(--bc-text);
++  border-radius: 16px 16px 16px 4px;
++  padding: 0.85rem 1rem;
++  font-size: 0.88rem;
++  line-height: 1.55;
++  position: relative;
++}
++.ai-empty__bubble.is-placeholder {
++  color: var(--bc-text-muted);
++  font-style: italic;
++  background: var(--bc-gray-soft);
++}
++.ai-empty__chars {
++  margin-top: 0.5rem;
++  font-size: 0.7rem;
++  font-family: 'JetBrains Mono', monospace;
++  color: var(--bc-text-muted);
++  text-align: right;
++}
++
++.ai-empty__tips {
++  background: var(--bc-gray);
++  border-radius: 14px;
++  padding: 1.25rem;
++}
++.ai-empty__tips-title {
++  font-family: 'Manrope', sans-serif;
++  font-size: 0.95rem;
++  font-weight: 700;
++  margin: 0 0 1rem;
++  color: var(--bc-text);
++}
++.ai-empty__steps {
++  list-style: none;
++  padding: 0;
++  margin: 0 0 1rem;
++  display: flex;
++  flex-direction: column;
++  gap: 0.85rem;
++}
++.ai-empty__steps li {
++  display: flex;
++  align-items: flex-start;
++  gap: 0.75rem;
++}
++.ai-empty__step-num {
++  flex-shrink: 0;
++  width: 26px;
++  height: 26px;
++  border-radius: 50%;
++  background: var(--bc-primary-subtle);
++  color: var(--bc-primary);
++  font-weight: 700;
++  font-size: 0.78rem;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++}
++.ai-empty__steps li > div {
++  display: flex;
++  flex-direction: column;
++  gap: 0.15rem;
++  font-size: 0.85rem;
++  line-height: 1.4;
++}
++.ai-empty__steps strong { color: var(--bc-text); font-weight: 600; }
++
++.ai-empty__note {
++  display: flex;
++  align-items: flex-start;
++  gap: 0.5rem;
++  padding: 0.65rem 0.85rem;
++  background: rgba(0, 100, 255, 0.06);
++  border-left: 2px solid var(--bc-primary);
++  border-radius: 6px;
++  font-size: 0.78rem;
++  color: var(--bc-text-muted);
++  line-height: 1.45;
++}
++.ai-empty__note i {
++  color: var(--bc-primary);
++  margin-top: 0.15rem;
++  flex-shrink: 0;
++}
+ </style>
+diff --git a/new_saas/frontend/src/components/funnels/FunnelToolbar.vue b/new_saas/frontend/src/components/funnels/FunnelToolbar.vue
+index 8b293cb5..f4465349 100644
+--- a/new_saas/frontend/src/components/funnels/FunnelToolbar.vue
++++ b/new_saas/frontend/src/components/funnels/FunnelToolbar.vue
+@@ -1,23 +1,36 @@
+ <template>
+-  <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+-    <div style="font-size:11px;color:#999;text-transform:uppercase;font-weight:600;margin-bottom:4px">Blocos</div>
+-    <div v-for="block in blocks" :key="block.type"
++  <div class="funnel-toolbar">
++    <div class="funnel-toolbar__heading">Blocos</div>
++    <div
++      v-for="block in blocks"
++      :key="block.type"
++      class="funnel-toolbar__block"
++      :style="{ '--block-color': block.color, '--block-bg': block.bg }"
+       draggable="true"
++      :aria-label="`Arraste para o canvas: bloco ${block.label}`"
++      :title="block.tip"
+       @dragstart="onDragStart($event, block.type)"
+-      :style="{ padding: '8px 12px', background: block.bg, borderRadius: '6px', cursor: 'grab', fontSize: '12px', fontWeight: 600, textAlign: 'center', border: '1px solid ' + block.border }">
+-      {{ block.icon }} {{ block.label }}
++    >
++      <div class="funnel-toolbar__icon">
++        <i :class="`ti ${block.icon}`"></i>
++      </div>
++      <span class="funnel-toolbar__label">{{ block.label }}</span>
++    </div>
++    <div class="funnel-toolbar__hint">
++      <i class="ti ti-info-circle me-1"></i>
++      Arraste um bloco para o canvas.
+     </div>
+   </div>
+ </template>
+ 
+ <script setup lang="ts">
+ const blocks = [
+-  { type: 'message', label: 'Mensagem', icon: '📨', bg: '#dcfce7', border: '#16a34a' },
+-  { type: 'wait', label: 'Espera', icon: '⏱', bg: '#fef3c7', border: '#f59e0b' },
+-  { type: 'condition', label: 'Condição', icon: '🔀', bg: '#dbeafe', border: '#3b82f6' },
+-  { type: 'tag', label: 'Tag', icon: '🏷', bg: '#fce7f3', border: '#ec4899' },
+-  { type: 'transfer_human', label: 'Transferir', icon: '👤', bg: '#f5f3ff', border: '#8b5cf6' },
+-  { type: 'ai_reply', label: 'IA Responde', icon: '🤖', bg: '#ecfeff', border: '#06b6d4' },
++  { type: 'message',        label: 'Mensagem',     icon: 'ti-message',      color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  tip: 'Envia uma mensagem ao contato' },
++  { type: 'wait',           label: 'Espera',       icon: 'ti-clock',        color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', tip: 'Aguarda um tempo antes do próximo bloco' },
++  { type: 'condition',      label: 'Condição',     icon: 'ti-arrows-split', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', tip: 'Bifurca o fluxo conforme uma regra' },
++  { type: 'tag',            label: 'Tag',          icon: 'ti-tag',          color: '#ec4899', bg: 'rgba(236,72,153,0.12)', tip: 'Marca o contato com uma tag' },
++  { type: 'transfer_human', label: 'Transferir',   icon: 'ti-user-check',   color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', tip: 'Encaminha para atendimento humano' },
++  { type: 'ai_reply',       label: 'IA Responde',  icon: 'ti-robot',        color: '#06b6d4', bg: 'rgba(6,182,212,0.12)',  tip: 'Resposta automática com IA' },
+ ]
+ 
+ function onDragStart(event: DragEvent, type: string) {
+@@ -25,3 +38,71 @@ function onDragStart(event: DragEvent, type: string) {
+   event.dataTransfer!.effectAllowed = 'move'
+ }
+ </script>
++
++<style scoped>
++.funnel-toolbar {
++  padding: 14px 10px;
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++}
++.funnel-toolbar__heading {
++  font-family: 'JetBrains Mono', monospace;
++  font-size: 0.62rem;
++  font-weight: 700;
++  text-transform: uppercase;
++  letter-spacing: 0.08em;
++  color: var(--bc-text-muted);
++  padding: 0 4px 4px;
++}
++.funnel-toolbar__block {
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  justify-content: center;
++  gap: 4px;
++  padding: 10px 6px;
++  background: var(--block-bg);
++  border: 1px solid transparent;
++  border-radius: 10px;
++  cursor: grab;
++  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
++  user-select: none;
++}
++.funnel-toolbar__block:hover {
++  border-color: var(--block-color);
++  transform: translateY(-1px);
++  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
++}
++.funnel-toolbar__block:active { cursor: grabbing; }
++.funnel-toolbar__block:focus-visible {
++  outline: 2px solid var(--block-color);
++  outline-offset: 2px;
++}
++.funnel-toolbar__icon {
++  width: 32px;
++  height: 32px;
++  border-radius: 8px;
++  background: rgba(255,255,255,0.04);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  color: var(--block-color);
++  font-size: 1.1rem;
++}
++.funnel-toolbar__label {
++  font-size: 0.72rem;
++  font-weight: 600;
++  color: var(--bc-text);
++  text-align: center;
++  line-height: 1.2;
++}
++.funnel-toolbar__hint {
++  margin-top: 0.5rem;
++  font-size: 0.65rem;
++  color: var(--bc-text-muted);
++  text-align: center;
++  line-height: 1.4;
++  padding: 0 4px;
++}
++</style>
+diff --git a/new_saas/frontend/src/components/funnels/NodePropertiesPanel.vue b/new_saas/frontend/src/components/funnels/NodePropertiesPanel.vue
+index db7123ef..7887a3fa 100644
+--- a/new_saas/frontend/src/components/funnels/NodePropertiesPanel.vue
++++ b/new_saas/frontend/src/components/funnels/NodePropertiesPanel.vue
+@@ -93,8 +93,32 @@
+       <input class="form-control form-control-sm" v-model="label" @input="emitLabelUpdate" placeholder="Nome visual do bloco">
+     </div>
+   </div>
+-  <div v-else style="padding:16px;color:#999;font-size:13px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%">
+-    Clique num bloco para editar
++  <div v-else class="node-empty">
++    <div class="node-empty__icon">
++      <i class="ti ti-pointer"></i>
++    </div>
++    <h4 class="node-empty__title">Selecione um bloco</h4>
++    <p class="node-empty__desc">
++      Clique em qualquer bloco no canvas para editar suas propriedades aqui.
++    </p>
++    <ol class="node-empty__steps">
++      <li>
++        <span class="node-empty__step-num">1</span>
++        Arraste blocos da barra lateral esquerda
++      </li>
++      <li>
++        <span class="node-empty__step-num">2</span>
++        Conecte-os puxando das bordas
++      </li>
++      <li>
++        <span class="node-empty__step-num">3</span>
++        Configure as propriedades de cada bloco
++      </li>
++      <li>
++        <span class="node-empty__step-num">4</span>
++        Defina os gatilhos no rodapé e ative
++      </li>
++    </ol>
+   </div>
+ </template>
+ 
+@@ -134,3 +158,68 @@ function emitLabelUpdate() {
+   if (props.node) emit('update:label', props.node.id, label.value)
+ }
+ </script>
++
++<style scoped>
++.node-empty {
++  height: 100%;
++  padding: 24px 20px;
++  display: flex;
++  flex-direction: column;
++  text-align: center;
++  color: var(--bc-text-muted);
++}
++.node-empty__icon {
++  width: 48px;
++  height: 48px;
++  border-radius: 12px;
++  background: var(--bc-primary-subtle);
++  color: var(--bc-primary);
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  font-size: 1.4rem;
++  margin: 0 auto 14px;
++}
++.node-empty__title {
++  font-size: 0.95rem;
++  font-weight: 700;
++  color: var(--bc-text);
++  margin: 0 0 6px;
++}
++.node-empty__desc {
++  font-size: 0.78rem;
++  line-height: 1.5;
++  margin: 0 0 18px;
++}
++.node-empty__steps {
++  list-style: none;
++  padding: 0;
++  margin: 0;
++  display: flex;
++  flex-direction: column;
++  gap: 0.6rem;
++  text-align: left;
++}
++.node-empty__steps li {
++  display: flex;
++  align-items: flex-start;
++  gap: 0.55rem;
++  font-size: 0.78rem;
++  color: var(--bc-text);
++  line-height: 1.35;
++}
++.node-empty__step-num {
++  flex-shrink: 0;
++  width: 20px;
++  height: 20px;
++  border-radius: 50%;
++  background: var(--bc-gray-soft);
++  color: var(--bc-text-muted);
++  font-size: 0.68rem;
++  font-weight: 700;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  margin-top: 1px;
++}
++</style>
+diff --git a/new_saas/frontend/src/pages/campaigns/SelectChannel.vue b/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
+index 2ca9e0a3..393bbb0c 100644
+--- a/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
++++ b/new_saas/frontend/src/pages/campaigns/SelectChannel.vue
+@@ -221,12 +221,18 @@ onMounted(loadChannels)
+   color: var(--bc-text-muted);
+ }
+ 
+-/* ─── 2x2 Grid ─── */
++/* ─── Responsive channel grid (até 4 colunas em desktop) ─── */
+ .sc-grid {
+   display: grid;
+-  grid-template-columns: repeat(2, 1fr);
+-  gap: 16px;
+-  max-width: 720px;
++  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
++  gap: 1rem;
++  width: 100%;
++}
++/* Em telas >= 1200px com 4 canais, força 4 colunas equilibradas */
++@media (min-width: 1200px) {
++  .sc-grid {
++    grid-template-columns: repeat(4, 1fr);
++  }
+ }
+ @media (max-width: 640px) {
+   .sc-grid { grid-template-columns: 1fr; }
+@@ -237,12 +243,14 @@ onMounted(loadChannels)
+   position: relative;
+   background: var(--bc-gray);
+   border-radius: var(--bc-radius-lg);
+-  padding: 28px 24px;
++  padding: 28px 20px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   text-align: center;
+   transition: var(--bc-transition);
++  min-height: 220px;
++  height: 100%;
+ }
+ 
+ /* Enabled hover */
+@@ -378,7 +386,7 @@ onMounted(loadChannels)
+   align-items: center;
+   justify-content: space-between;
+   margin-top: 2rem;
+-  max-width: 720px;
++  width: 100%;
+ }
+ .sc-footer__info {
+   font-size: 0.8rem;
+diff --git a/new_saas/frontend/src/pages/funnels/Editor.vue b/new_saas/frontend/src/pages/funnels/Editor.vue
+index b162006c..a157dff3 100644
+--- a/new_saas/frontend/src/pages/funnels/Editor.vue
++++ b/new_saas/frontend/src/pages/funnels/Editor.vue
+@@ -47,9 +47,19 @@
+           @node-click="onNodeClick"
+           @pane-click="selectedNode = null"
+         >
+-          <Background />
+-          <Controls />
+-          <MiniMap />
++          <Background pattern-color="#2a2f55" :gap="20" />
++          <Controls position="bottom-left" />
++          <MiniMap
++            position="bottom-right"
++            pannable
++            zoomable
++            :width="160"
++            :height="100"
++            mask-color="rgba(8,12,37,0.85)"
++            node-color="#0064ff"
++            node-stroke-color="#3b82f6"
++            :node-border-radius="4"
++          />
+         </VueFlow>
+       </div>
+ 
+-- 
+2.48.1.windows.1
+

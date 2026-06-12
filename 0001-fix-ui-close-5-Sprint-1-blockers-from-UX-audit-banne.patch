@@ -1,0 +1,222 @@
+From 8d20d59f54ad2151ef88d4405b8a4ee637a9f065 Mon Sep 17 00:00:00 2001
+From: admbusiness <admbusiness@35-30-168-184.host.secureserver.net>
+Date: Fri, 29 May 2026 20:25:19 -0300
+Subject: [PATCH 1/6] fix(ui): close 5 Sprint-1 blockers from UX audit (banner,
+ role, mobile, plans)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Sprint 1 from /ui-ux-pro-max Playwright audit (29/05):
+
+B1 — BalanceBanner cortado pelo sidebar em todas as páginas autenticadas.
+The banner was rendered as a root-level sibling of <AppLayout> in App.vue,
+so the fixed sidebar covered its left ~240px. Moved it inside <AppLayout>'s
+page-wrapper, above AppTopbar, so it only occupies the area to the right of
+the sidebar and shows in full.
+
+B6 — Topbar mostrava "Acesso Admin" para todo usuário não-superadmin,
+incluindo o próprio admin do tenant criado pelo registro público. Substituí
+por um mapa role→label cobrindo superadmin/admin/finance/agent/member com
+fallback "Usuário". Verifica também que o backend continua atribuindo
+exatamente role='admin' no registro (não escala para superadmin).
+
+B7 — Header do dashboard quebrava no mobile: título + 4 botões num único
+flex row forçava overflow horizontal. Troquei para flex-column flex-md-row
+com gap-3 e flex-wrap no grupo de ações. Adicionei também aria-label/visually
+hidden label no <select> de período (P1 a11y do audit).
+
+B2 — /plans (público) mostrava "Nenhum plano disponível no momento." quando
+o catálogo estava vazio, matando a conversão da landing. Substituí por
+empty state com CTA contextual (cria conta grátis se anônimo / recarrega
+saldo se autenticado) + botão "Falar com Vendas" via WhatsApp quando
+identity.sales_whatsapp está configurado.
+
+B3 — /settings/plans tinha o mesmo problema dentro do app autenticado
+(renderizava só título). Adicionei empty state explicando o modelo
+pré-pago + CTA "Recarregar Saldo".
+
+Test:
+- AuthFlowTest::test_register_creates_tenant_records_lgpd_consent_and_returns_token
+  agora também asserta data.user.role === 'admin' e user->role === 'admin',
+  blindando contra regressão de privilege escalation.
+- Build (vite build) passa.
+- Validação visual via Playwright: screenshots FIX-*.jpeg confirmando
+  banner inteiro, label "Administrador", mobile header empilhado,
+  /plans e /settings/plans com empty states úteis.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ .../backend/tests/Feature/AuthFlowTest.php    |  5 +++++
+ new_saas/frontend/src/App.vue                 |  2 --
+ .../src/components/layout/AppLayout.vue       |  4 ++++
+ .../src/components/layout/AppTopbar.vue       | 10 +++++++++-
+ .../src/pages/checkout/PricingPlans.vue       | 20 +++++++++++++++++--
+ .../frontend/src/pages/dashboard/Index.vue    |  9 +++++----
+ .../frontend/src/pages/settings/Plans.vue     | 11 ++++++++++
+ 7 files changed, 52 insertions(+), 9 deletions(-)
+
+diff --git a/new_saas/backend/tests/Feature/AuthFlowTest.php b/new_saas/backend/tests/Feature/AuthFlowTest.php
+index fba50057..7b02d05c 100644
+--- a/new_saas/backend/tests/Feature/AuthFlowTest.php
++++ b/new_saas/backend/tests/Feature/AuthFlowTest.php
+@@ -31,7 +31,12 @@ public function test_register_creates_tenant_records_lgpd_consent_and_returns_to
+         $this->assertNotEmpty($data['token']);
+         $this->assertNotEmpty($data['user']['tenant']['id']);
+ 
++        // Registro público nunca pode escalar para superadmin — frontend usa esse role
++        // pra decidir labels e gates de UI, então o backend é a fonte da verdade.
++        $this->assertSame('admin', $data['user']['role']);
++
+         $user = User::where('email', 'test@example.com')->first();
++        $this->assertSame('admin', $user->role);
+         $this->assertNotNull($user->lgpd_consented_at);
+         $this->assertSame('2026.1.0', $user->lgpd_consent_version);
+         $this->assertNotEmpty($user->lgpd_consent_ip);
+diff --git a/new_saas/frontend/src/App.vue b/new_saas/frontend/src/App.vue
+index ee7e3e03..c9024535 100644
+--- a/new_saas/frontend/src/App.vue
++++ b/new_saas/frontend/src/App.vue
+@@ -1,5 +1,4 @@
+ <template>
+-  <BalanceBanner v-if="auth.isAuthenticated && showLayout" />
+   <AppLayout v-if="showLayout" />
+   <RouterView v-else />
+ </template>
+@@ -8,7 +7,6 @@
+ import { onMounted, computed } from 'vue'
+ import { useRoute } from 'vue-router'
+ import AppLayout from '@/components/layout/AppLayout.vue'
+-import BalanceBanner from '@/components/billing/BalanceBanner.vue'
+ import { useAuthStore } from '@/stores/auth'
+ 
+ const route = useRoute()
+diff --git a/new_saas/frontend/src/components/layout/AppLayout.vue b/new_saas/frontend/src/components/layout/AppLayout.vue
+index 37ba859b..dd17bd30 100644
+--- a/new_saas/frontend/src/components/layout/AppLayout.vue
++++ b/new_saas/frontend/src/components/layout/AppLayout.vue
+@@ -14,6 +14,7 @@
+     </div>
+ 
+     <div class="page-wrapper">
++      <BalanceBanner v-if="auth.isAuthenticated" />
+       <AppTopbar />
+       <div class="page-body">
+         <div class="container-xl">
+@@ -41,9 +42,12 @@
+ <script setup lang="ts">
+ import AppSidebar from './AppSidebar.vue'
+ import AppTopbar from './AppTopbar.vue'
++import BalanceBanner from '@/components/billing/BalanceBanner.vue'
+ import { useIdentity } from '@/composables/useIdentity'
++import { useAuthStore } from '@/stores/auth'
+ 
+ const { identity, loading: identityLoading } = useIdentity()
++const auth = useAuthStore()
+ 
+ function closeDrawer() {
+   const el = document.getElementById('mobile-drawer')
+diff --git a/new_saas/frontend/src/components/layout/AppTopbar.vue b/new_saas/frontend/src/components/layout/AppTopbar.vue
+index 43f25a06..86fbf6d4 100644
+--- a/new_saas/frontend/src/components/layout/AppTopbar.vue
++++ b/new_saas/frontend/src/components/layout/AppTopbar.vue
+@@ -71,9 +71,17 @@ const { theme, toggle: toggleTheme } = useTheme()
+ 
+ const userName = computed(() => auth.user?.name ?? '')
+ const userEmail = computed(() => auth.user?.email ?? '')
++const ROLE_LABELS: Record<string, string> = {
++  superadmin: 'Administrador',
++  admin: 'Administrador',
++  finance: 'Financeiro',
++  agent: 'Operador',
++  member: 'Membro',
++}
+ const userRole = computed(() => {
+   const role = auth.user?.role
+-  return role === 'superadmin' ? 'Administrador' : 'Acesso Admin'
++  if (!role) return 'Usuário'
++  return ROLE_LABELS[role] ?? 'Usuário'
+ })
+ const userInitials = computed(() => {
+   const name = userName.value || userEmail.value
+diff --git a/new_saas/frontend/src/pages/checkout/PricingPlans.vue b/new_saas/frontend/src/pages/checkout/PricingPlans.vue
+index 4d86b133..b5126c56 100644
+--- a/new_saas/frontend/src/pages/checkout/PricingPlans.vue
++++ b/new_saas/frontend/src/pages/checkout/PricingPlans.vue
+@@ -39,8 +39,24 @@
+ 
+       <div v-if="loading" class="text-center py-5"><span class="spinner-border spinner-border-sm"></span></div>
+ 
+-      <div v-else-if="!plans.length" class="text-center py-5" style="color:rgba(194,198,216,1)">
+-        Nenhum plano disponível no momento.
++      <div v-else-if="!plans.length" class="text-center py-5" style="color:rgba(194,198,216,1);max-width:520px;margin:0 auto">
++        <i class="ti ti-rocket" style="font-size:2.5rem;color:#0064ff;display:block;margin-bottom:1rem"></i>
++        <h2 style="font-size:1.4rem;font-weight:700;color:white;margin-bottom:0.5rem">Planos personalizados sob consulta</h2>
++        <p style="font-size:.95rem;margin-bottom:1.5rem">
++          Ainda estamos finalizando nossos planos comerciais. Enquanto isso, você já pode
++          {{ isAuthenticated ? 'usar a plataforma com saldo pré-pago' : 'criar uma conta grátis e testar com saldo inicial' }}.
++        </p>
++        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
++          <router-link v-if="!isAuthenticated" to="/register" class="btn btn-primary" style="border-radius:10px;padding:.7rem 1.25rem;font-weight:700">
++            Criar conta grátis
++          </router-link>
++          <router-link v-else to="/settings/saldo" class="btn btn-primary" style="border-radius:10px;padding:.7rem 1.25rem;font-weight:700">
++            Recarregar saldo
++          </router-link>
++          <button v-if="identity?.sales_whatsapp" @click="contactSales" class="btn btn-outline-secondary" style="border-radius:10px;padding:.7rem 1.25rem;font-weight:700">
++            <i class="ti ti-brand-whatsapp me-1"></i> Falar com Vendas
++          </button>
++        </div>
+       </div>
+ 
+       <div v-else style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;align-items:stretch">
+diff --git a/new_saas/frontend/src/pages/dashboard/Index.vue b/new_saas/frontend/src/pages/dashboard/Index.vue
+index aa576d9a..76683349 100644
+--- a/new_saas/frontend/src/pages/dashboard/Index.vue
++++ b/new_saas/frontend/src/pages/dashboard/Index.vue
+@@ -1,15 +1,16 @@
+ <template>
+   <div>
+-    <div class="d-flex align-items-center justify-content-between mb-4">
++    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
+       <div>
+         <h2 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.03em;margin:0">Visão Geral</h2>
+         <p style="color:var(--bc-text-muted);font-size:0.85rem;margin:0.25rem 0 0">Desempenho estratégico em todos os canais ativos</p>
+       </div>
+-      <div class="d-flex align-items-center gap-2">
+-        <select class="form-select form-select-sm bc-select" v-model="period" @change="loadStats">
++      <div class="d-flex align-items-center gap-2 flex-wrap">
++        <label class="visually-hidden" for="dashboard-period">Período</label>
++        <select id="dashboard-period" class="form-select form-select-sm bc-select" v-model="period" @change="loadStats" aria-label="Filtrar período do dashboard">
+           <option v-for="opt in periodOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+         </select>
+-        <button class="btn btn-sm btn-icon bc-btn-refresh" @click="loadStats" :disabled="isLoading" title="Atualizar">
++        <button class="btn btn-sm btn-icon bc-btn-refresh" @click="loadStats" :disabled="isLoading" title="Atualizar" aria-label="Atualizar dados do dashboard">
+           <i class="ti ti-refresh" :class="{ 'bc-spin': isLoading }"></i>
+         </button>
+         <button class="btn btn-ghost-secondary btn-sm" @click="router.push('/reports/campaigns')">
+diff --git a/new_saas/frontend/src/pages/settings/Plans.vue b/new_saas/frontend/src/pages/settings/Plans.vue
+index 8ec3feb2..95105a19 100644
+--- a/new_saas/frontend/src/pages/settings/Plans.vue
++++ b/new_saas/frontend/src/pages/settings/Plans.vue
+@@ -28,6 +28,17 @@
+     <!-- Plans grid -->
+     <div v-if="loading" class="text-center py-5"><span class="spinner-border spinner-border-sm"></span></div>
+ 
++    <div v-else-if="!plans.length" class="text-center py-5" style="background:var(--bc-gray-soft);border-radius:14px">
++      <i class="ti ti-package" style="font-size:2.5rem;color:var(--bc-text-muted);display:block;margin-bottom:.75rem"></i>
++      <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:.25rem">Nenhum plano disponível</h3>
++      <p style="font-size:.85rem;color:var(--bc-text-muted);max-width:420px;margin:0 auto 1rem">
++        Você está usando o modelo pré-pago. Recarregue saldo conforme sua necessidade.
++      </p>
++      <router-link to="/settings/saldo" class="btn btn-primary" style="border-radius:10px">
++        <i class="ti ti-wallet me-1"></i> Recarregar Saldo
++      </router-link>
++    </div>
++
+     <div v-else class="row g-3">
+       <div v-for="plan in plans" :key="plan.id" class="col-12 col-md-6 col-xl-3">
+         <div class="bc-plan-card" :class="{ 'bc-plan-current': plan.slug === currentPlan?.slug, 'bc-plan-popular': plan.slug === 'pro' }">
+-- 
+2.48.1.windows.1
+

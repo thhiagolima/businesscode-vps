@@ -1,0 +1,288 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "BusinessCode API",
+    "version": "1.0.0",
+    "description": "API do BusinessCode - Plataforma SaaS de campanhas multicanal com IA"
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Sanctum"
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "Auth", "description": "Autenticacao e perfil" },
+    { "name": "Dashboard", "description": "Estatisticas do dashboard" },
+    { "name": "Campaigns", "description": "Gerenciamento de campanhas" },
+    { "name": "Contacts", "description": "Listas e contatos" },
+    { "name": "WhatsApp", "description": "Templates e envio WhatsApp" },
+    { "name": "Conversations", "description": "Inbox de conversas" },
+    { "name": "Chatbot", "description": "Persona e config do chatbot" },
+    { "name": "Funnels", "description": "Funis visuais de automacao" },
+    { "name": "AI", "description": "Geracao de conteudo com IA" },
+    { "name": "Reports", "description": "Relatorios e exportacao" },
+    { "name": "Admin", "description": "Configuracoes de superadmin" }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": { "tags": ["Auth"], "summary": "Fazer login e obter token", "security": [] }
+    },
+    "/auth/forgot-password": {
+      "post": { "tags": ["Auth"], "summary": "Solicitar redefinicao de senha", "security": [] }
+    },
+    "/auth/reset-password": {
+      "post": { "tags": ["Auth"], "summary": "Redefinir senha com token", "security": [] }
+    },
+    "/auth/logout": {
+      "post": { "tags": ["Auth"], "summary": "Encerrar sessao (revogar token)" }
+    },
+    "/auth/me": {
+      "get": { "tags": ["Auth"], "summary": "Obter dados do usuario autenticado" }
+    },
+    "/auth/profile": {
+      "put": { "tags": ["Auth"], "summary": "Atualizar perfil do usuario" }
+    },
+    "/auth/password": {
+      "put": { "tags": ["Auth"], "summary": "Alterar senha do usuario" }
+    },
+    "/dashboard/stats": {
+      "get": { "tags": ["Dashboard"], "summary": "Obter estatisticas gerais do dashboard" }
+    },
+    "/reports/campaigns": {
+      "get": { "tags": ["Reports"], "summary": "Listar relatorios de campanhas" }
+    },
+    "/reports/campaigns/{id}": {
+      "get": { "tags": ["Reports"], "summary": "Detalhe do relatorio de uma campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/reports/campaigns/{id}/export": {
+      "get": { "tags": ["Reports"], "summary": "Exportar relatorio da campanha (CSV)", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/reports/credits": {
+      "get": { "tags": ["Reports"], "summary": "Relatorio de consumo de creditos" }
+    },
+    "/contact-lists": {
+      "get": { "tags": ["Contacts"], "summary": "Listar listas de contatos" },
+      "post": { "tags": ["Contacts"], "summary": "Criar nova lista de contatos" }
+    },
+    "/contact-lists/{id}": {
+      "get": { "tags": ["Contacts"], "summary": "Ver detalhes de uma lista", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "put": { "tags": ["Contacts"], "summary": "Atualizar lista de contatos", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Contacts"], "summary": "Remover lista de contatos", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/contacts": {
+      "get": { "tags": ["Contacts"], "summary": "Listar contatos com filtros" },
+      "post": { "tags": ["Contacts"], "summary": "Criar novo contato" }
+    },
+    "/contacts/{id}": {
+      "put": { "tags": ["Contacts"], "summary": "Atualizar contato", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Contacts"], "summary": "Remover contato", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/contacts/batch": {
+      "post": { "tags": ["Contacts"], "summary": "Criar ou atualizar contatos em lote" }
+    },
+    "/contacts/import": {
+      "post": { "tags": ["Contacts"], "summary": "Importar contatos via arquivo CSV/XLSX" }
+    },
+    "/contacts/import/{id}": {
+      "get": { "tags": ["Contacts"], "summary": "Status de uma importacao", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns": {
+      "get": { "tags": ["Campaigns"], "summary": "Listar campanhas do tenant" },
+      "post": { "tags": ["Campaigns"], "summary": "Criar nova campanha" }
+    },
+    "/campaigns/{id}": {
+      "get": { "tags": ["Campaigns"], "summary": "Detalhe de uma campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "put": { "tags": ["Campaigns"], "summary": "Atualizar campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Campaigns"], "summary": "Remover campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/send-now": {
+      "post": { "tags": ["Campaigns"], "summary": "Disparar campanha imediatamente", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/schedule": {
+      "post": { "tags": ["Campaigns"], "summary": "Agendar envio da campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/cancel": {
+      "post": { "tags": ["Campaigns"], "summary": "Cancelar campanha agendada", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/dispatches": {
+      "get": { "tags": ["Campaigns"], "summary": "Listar disparos de uma campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/ai-sessions": {
+      "get": { "tags": ["Campaigns"], "summary": "Listar sessoes IA da campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/campaigns/{id}/audio": {
+      "post": { "tags": ["Campaigns"], "summary": "Gerar audio TTS para campanha de voz", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "get": { "tags": ["Campaigns"], "summary": "Listar audios gerados da campanha", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/audio/{id}": {
+      "get": { "tags": ["Campaigns"], "summary": "Detalhes de um audio gerado", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/audio/{id}/refresh-url": {
+      "get": { "tags": ["Campaigns"], "summary": "Renovar URL assinada do audio", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/ai/generate": {
+      "post": { "tags": ["AI"], "summary": "Gerar conteudo com IA (texto, assunto, etc)" }
+    },
+    "/ai/analyze": {
+      "post": { "tags": ["AI"], "summary": "Analisar conteudo com IA" }
+    },
+    "/ai/prompts": {
+      "get": { "tags": ["AI"], "summary": "Listar prompts disponiveis (superadmin)" }
+    },
+    "/ai/generations": {
+      "get": { "tags": ["AI"], "summary": "Historico de geracoes de IA" }
+    },
+    "/ai/sessions": {
+      "get": { "tags": ["AI"], "summary": "Listar sessoes de IA (legacy)" }
+    },
+    "/ai/models": {
+      "get": { "tags": ["AI"], "summary": "Listar modelos de conteudo salvos" },
+      "post": { "tags": ["AI"], "summary": "Salvar novo modelo de conteudo" }
+    },
+    "/ai/models/{id}": {
+      "get": { "tags": ["AI"], "summary": "Ver modelo de conteudo", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["AI"], "summary": "Remover modelo de conteudo", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/whatsapp/templates": {
+      "get": { "tags": ["WhatsApp"], "summary": "Listar templates aprovados do WhatsApp" }
+    },
+    "/whatsapp/templates/{name}": {
+      "get": { "tags": ["WhatsApp"], "summary": "Pre-visualizar template por nome", "parameters": [{ "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }] }
+    },
+    "/whatsapp/send-text": {
+      "post": { "tags": ["WhatsApp"], "summary": "Enviar mensagem de texto via WhatsApp" }
+    },
+    "/webhooks/whatsapp": {
+      "get": { "tags": ["WhatsApp"], "summary": "Verificacao do webhook Meta (challenge)", "security": [] },
+      "post": { "tags": ["WhatsApp"], "summary": "Receber eventos do webhook Meta", "security": [] }
+    },
+    "/webhooks/infobip/delivery": {
+      "post": { "tags": ["Campaigns"], "summary": "Webhook de status de entrega Infobip", "security": [] }
+    },
+    "/conversations/unread-count": {
+      "get": { "tags": ["Conversations"], "summary": "Total de conversas nao lidas" }
+    },
+    "/conversations": {
+      "get": { "tags": ["Conversations"], "summary": "Listar conversas do inbox" }
+    },
+    "/conversations/{id}": {
+      "get": { "tags": ["Conversations"], "summary": "Ver mensagens de uma conversa", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/conversations/{id}/messages": {
+      "post": { "tags": ["Conversations"], "summary": "Enviar mensagem em uma conversa", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/conversations/{id}/status": {
+      "patch": { "tags": ["Conversations"], "summary": "Atualizar status da conversa (aberta/fechada)", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/chatbot/persona": {
+      "get": { "tags": ["Chatbot"], "summary": "Ver persona do chatbot" },
+      "put": { "tags": ["Chatbot"], "summary": "Atualizar persona do chatbot" }
+    },
+    "/chatbot/settings": {
+      "get": { "tags": ["Chatbot"], "summary": "Ver configuracoes do chatbot" },
+      "put": { "tags": ["Chatbot"], "summary": "Atualizar configuracoes do chatbot" }
+    },
+    "/funnels": {
+      "get": { "tags": ["Funnels"], "summary": "Listar funis do tenant" },
+      "post": { "tags": ["Funnels"], "summary": "Criar novo funil" }
+    },
+    "/funnels/{id}": {
+      "get": { "tags": ["Funnels"], "summary": "Detalhe de um funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "put": { "tags": ["Funnels"], "summary": "Atualizar funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Funnels"], "summary": "Remover funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/canvas": {
+      "put": { "tags": ["Funnels"], "summary": "Salvar canvas (nodes e edges) do funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/activate": {
+      "post": { "tags": ["Funnels"], "summary": "Ativar funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/pause": {
+      "post": { "tags": ["Funnels"], "summary": "Pausar funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/enroll": {
+      "post": { "tags": ["Funnels"], "summary": "Inscrever contatos no funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/duplicate": {
+      "post": { "tags": ["Funnels"], "summary": "Duplicar funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/funnels/{id}/executions": {
+      "get": { "tags": ["Funnels"], "summary": "Listar execucoes do funil", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/settings/infobip": {
+      "get": { "tags": ["Admin"], "summary": "Ver configuracoes Infobip" },
+      "put": { "tags": ["Admin"], "summary": "Atualizar configuracoes Infobip" }
+    },
+    "/admin/settings/infobip/test": {
+      "post": { "tags": ["Admin"], "summary": "Testar conexao Infobip" }
+    },
+    "/admin/settings/ai": {
+      "get": { "tags": ["Admin"], "summary": "Ver configuracoes de IA (Grok)" },
+      "put": { "tags": ["Admin"], "summary": "Atualizar configuracoes de IA" }
+    },
+    "/admin/settings/ai/test": {
+      "post": { "tags": ["Admin"], "summary": "Testar conexao com API de IA" }
+    },
+    "/admin/settings/elevenlabs": {
+      "get": { "tags": ["Admin"], "summary": "Ver configuracoes ElevenLabs" },
+      "put": { "tags": ["Admin"], "summary": "Atualizar configuracoes ElevenLabs" }
+    },
+    "/admin/settings/elevenlabs/test": {
+      "post": { "tags": ["Admin"], "summary": "Testar conexao ElevenLabs" }
+    },
+    "/admin/elevenlabs/voices": {
+      "get": { "tags": ["Admin"], "summary": "Listar vozes ElevenLabs sincronizadas" }
+    },
+    "/admin/elevenlabs/sync-voices": {
+      "post": { "tags": ["Admin"], "summary": "Sincronizar vozes do ElevenLabs" }
+    },
+    "/admin/settings/whatsapp": {
+      "get": { "tags": ["Admin"], "summary": "Ver configuracoes WhatsApp Cloud API" },
+      "put": { "tags": ["Admin"], "summary": "Atualizar configuracoes WhatsApp" }
+    },
+    "/admin/settings/whatsapp/test": {
+      "post": { "tags": ["Admin"], "summary": "Testar conexao WhatsApp Cloud API" }
+    },
+    "/admin/settings/whatsapp/sync-templates": {
+      "post": { "tags": ["Admin"], "summary": "Sincronizar templates do WhatsApp" }
+    },
+    "/admin/ai-personas": {
+      "get": { "tags": ["Admin"], "summary": "Listar personas de IA (moderacao)" }
+    },
+    "/admin/ai-personas/{id}": {
+      "get": { "tags": ["Admin"], "summary": "Ver detalhes de uma persona", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/ai-personas/{id}/approve": {
+      "patch": { "tags": ["Admin"], "summary": "Aprovar persona de IA", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/ai-personas/{id}/reject": {
+      "patch": { "tags": ["Admin"], "summary": "Rejeitar persona de IA", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/plans": {
+      "get": { "tags": ["Admin"], "summary": "Listar planos" },
+      "post": { "tags": ["Admin"], "summary": "Criar novo plano" }
+    },
+    "/admin/plans/{id}": {
+      "put": { "tags": ["Admin"], "summary": "Atualizar plano", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Admin"], "summary": "Remover plano", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/tenants": {
+      "get": { "tags": ["Admin"], "summary": "Listar tenants" },
+      "post": { "tags": ["Admin"], "summary": "Criar novo tenant" }
+    },
+    "/admin/tenants/{id}": {
+      "get": { "tags": ["Admin"], "summary": "Detalhe de um tenant", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "put": { "tags": ["Admin"], "summary": "Atualizar tenant", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] },
+      "delete": { "tags": ["Admin"], "summary": "Remover tenant", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    },
+    "/admin/tenants/{id}/credits": {
+      "post": { "tags": ["Admin"], "summary": "Adicionar creditos ao tenant", "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }] }
+    }
+  }
+}

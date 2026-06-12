@@ -1,0 +1,116 @@
+<h2>Editor de Funil — Abordagem Visual</h2>
+<p class="subtitle">Qual estilo de editor para criar sequências automatizadas?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Vue Flow (Fluxograma Conectado)</h3>
+      <p>Biblioteca <code>@vue-flow/core</code> — nós arrastáveis conectados por linhas. Cada nó é um bloco (mensagem, delay, condição). Conexões definem o caminho. Padrão da indústria (n8n, Botpress, ManyChat).</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:20px;background:#f8f9fb;min-height:280px;position:relative;overflow:hidden">
+          <!-- Toolbar -->
+          <div style="position:absolute;left:12px;top:12px;background:#fff;border-radius:8px;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:6px;z-index:2">
+            <div style="padding:4px 8px;font-size:10px;background:#dcfce7;border-radius:4px;cursor:grab;text-align:center">📨 Mensagem</div>
+            <div style="padding:4px 8px;font-size:10px;background:#fef3c7;border-radius:4px;cursor:grab;text-align:center">⏱ Espera</div>
+            <div style="padding:4px 8px;font-size:10px;background:#dbeafe;border-radius:4px;cursor:grab;text-align:center">🔀 Condição</div>
+            <div style="padding:4px 8px;font-size:10px;background:#fce7f3;border-radius:4px;cursor:grab;text-align:center">🏷 Tag</div>
+          </div>
+
+          <!-- Flow nodes -->
+          <div style="position:absolute;left:140px;top:20px;background:#fff;border:2px solid #16a34a;border-radius:8px;padding:10px 16px;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05)">
+            <div style="font-size:9px;color:#16a34a;font-weight:600;text-transform:uppercase">Início</div>
+            <div style="font-weight:600">Trigger: Nova conversa</div>
+          </div>
+
+          <!-- Arrow -->
+          <svg style="position:absolute;left:200px;top:65px;width:2px;height:25px"><line x1="1" y1="0" x2="1" y2="25" stroke="#ccc" stroke-width="2"/></svg>
+          <div style="position:absolute;left:196px;top:85px;font-size:14px;color:#ccc">▼</div>
+
+          <div style="position:absolute;left:120px;top:95px;background:#fff;border:2px solid #0064ff;border-radius:8px;padding:10px 16px;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05)">
+            <div style="font-size:9px;color:#0064ff;font-weight:600;text-transform:uppercase">📨 Mensagem</div>
+            <div>Olá! Bem-vindo à nossa loja</div>
+          </div>
+
+          <svg style="position:absolute;left:200px;top:140px;width:2px;height:25px"><line x1="1" y1="0" x2="1" y2="25" stroke="#ccc" stroke-width="2"/></svg>
+          <div style="position:absolute;left:196px;top:160px;font-size:14px;color:#ccc">▼</div>
+
+          <div style="position:absolute;left:135px;top:170px;background:#fff;border:2px solid #f59e0b;border-radius:8px;padding:10px 16px;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05)">
+            <div style="font-size:9px;color:#f59e0b;font-weight:600;text-transform:uppercase">⏱ Espera</div>
+            <div>Aguardar 2 horas</div>
+          </div>
+
+          <svg style="position:absolute;left:200px;top:215px;width:2px;height:25px"><line x1="1" y1="0" x2="1" y2="25" stroke="#ccc" stroke-width="2"/></svg>
+          <div style="position:absolute;left:196px;top:235px;font-size:14px;color:#ccc">▼</div>
+
+          <!-- Condition with branches -->
+          <div style="position:absolute;left:110px;top:245px;background:#fff;border:2px solid #3b82f6;border-radius:8px;padding:10px 16px;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,0.05);min-width:140px">
+            <div style="font-size:9px;color:#3b82f6;font-weight:600;text-transform:uppercase">🔀 Condição</div>
+            <div>Respondeu?</div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px">
+              <span style="color:#16a34a">✓ Sim</span>
+              <span style="color:#dc2626">✕ Não</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Visual intuitivo tipo fluxograma</li><li>Suporta ramificações (condições com 2+ saídas)</li><li>Biblioteca madura (10k+ stars)</li><li>Zoom, pan, minimap built-in</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>+80KB bundle size</li><li>Curva de aprendizado para customizar nós</li><li>Mais complexo de implementar</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Lista Sequencial com Drag-and-Drop</h3>
+      <p>Lista vertical de blocos arrastáveis com <code>vuedraggable</code>. Mais simples — cada bloco é um card que pode ser reordenado. Condições ficam como "if/else" inline. Sem linhas de conexão.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-body" style="padding:16px;background:#f8f9fb;max-width:400px;margin:0 auto">
+          <div style="background:#fff;border:1px solid #e0e5ec;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:grab">
+            <span style="color:#999;font-size:14px">⋮⋮</span>
+            <div style="width:28px;height:28px;border-radius:6px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📨</div>
+            <div style="flex:1;font-size:12px">
+              <div style="font-weight:600">Mensagem de boas-vindas</div>
+              <div style="color:#666;font-size:11px">Olá! Bem-vindo à nossa loja</div>
+            </div>
+            <span style="color:#999;font-size:12px">✎</span>
+          </div>
+          <div style="text-align:center;color:#ccc;font-size:18px;margin:4px 0">↓</div>
+          <div style="background:#fff;border:1px solid #e0e5ec;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:grab">
+            <span style="color:#999;font-size:14px">⋮⋮</span>
+            <div style="width:28px;height:28px;border-radius:6px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⏱</div>
+            <div style="flex:1;font-size:12px">
+              <div style="font-weight:600">Aguardar 2 horas</div>
+            </div>
+            <span style="color:#999;font-size:12px">✎</span>
+          </div>
+          <div style="text-align:center;color:#ccc;font-size:18px;margin:4px 0">↓</div>
+          <div style="background:#fff;border:2px solid #3b82f6;border-radius:8px;padding:12px;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="color:#999;font-size:14px">⋮⋮</span>
+              <div style="width:28px;height:28px;border-radius:6px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔀</div>
+              <div style="font-weight:600;font-size:12px">Se respondeu</div>
+            </div>
+            <div style="margin-left:38px;border-left:2px solid #16a34a;padding-left:12px;margin-bottom:8px">
+              <div style="font-size:10px;color:#16a34a;font-weight:600;margin-bottom:4px">✓ SIM</div>
+              <div style="background:#f0fdf4;border-radius:6px;padding:8px;font-size:11px">🏷 Adicionar tag "interessado"</div>
+            </div>
+            <div style="margin-left:38px;border-left:2px solid #dc2626;padding-left:12px">
+              <div style="font-size:10px;color:#dc2626;font-weight:600;margin-bottom:4px">✕ NÃO</div>
+              <div style="background:#fef2f2;border-radius:6px;padding:8px;font-size:11px">📨 Enviar lembrete</div>
+            </div>
+          </div>
+          <div style="border:1px dashed #ccc;border-radius:8px;padding:12px;text-align:center;color:#999;font-size:12px;cursor:pointer;margin-top:8px">
+            + Adicionar bloco
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Simples e rápido de implementar</li><li>+15KB bundle (vuedraggable)</li><li>Intuitivo para sequências lineares</li><li>Mobile-friendly</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Ramificações ficam aninhadas (menos visual)</li><li>Sem zoom/pan para funis grandes</li><li>Menos profissional visualmente</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

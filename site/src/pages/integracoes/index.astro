@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const entries = (await getCollection('integracoes')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+<BaseLayout title="Integrações — BusinessCode" description="Conecte a BusinessCode às ferramentas que a sua empresa já usa.">
+  <h1>Integrações</h1>
+  <ul>
+    {entries.map((e) => (
+      <li><a href={`/integracoes/${e.data.slug}`}>{e.data.title}</a> — {e.data.description}</li>
+    ))}
+  </ul>
+</BaseLayout>
