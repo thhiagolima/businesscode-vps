@@ -59,6 +59,8 @@ CMD ["php-fpm"]
 # Stage 4: imagem Nginx com assets estáticos
 ###########################################
 FROM nginx:1.27-alpine AS nginx
+# Remove o default server da imagem base (evita conflito de server padrão na :80)
+RUN rm -f /etc/nginx/conf.d/default.conf
 COPY docker/nginx/conf.d/ /etc/nginx/conf.d/
 COPY --from=frontend-build /app/frontend/dist /var/www/dash
 COPY --from=site-build     /app/site/dist     /var/www/site

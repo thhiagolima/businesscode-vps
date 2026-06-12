@@ -3,8 +3,6 @@ services:
     build:
       context: .
       target: app
-      args:
-        VITE_API_URL: ${VITE_API_URL}
     image: businesscode/app:latest
     env_file: [ ./backend/.env ]
     environment:
@@ -21,7 +19,7 @@ services:
     env_file: [ ./backend/.env ]
     environment:
       CONTAINER_ROLE: worker
-    command: php artisan queue:work --queue=campaigns,messaging,billing,default --sleep=3 --tries=3 --max-time=3600 --timeout=3600
+    command: php artisan queue:work --queue=campaigns,messaging,billing,default --sleep=3 --tries=3 --timeout=3600 --max-time=3700
     volumes:
       - storage:/var/www/html/storage
     depends_on:
@@ -54,6 +52,7 @@ services:
     volumes:
       - letsencrypt:/etc/letsencrypt
       - certbot-www:/var/www/certbot
+      - storage:/var/www/html/storage:ro
     depends_on: [ app ]
     restart: unless-stopped
 
@@ -74,7 +73,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
       interval: 10s
       timeout: 5s
       retries: 10

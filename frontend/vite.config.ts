@@ -37,7 +37,8 @@ export default defineConfig({
       },
     },
   },
-  // Gera app.html em vez de index.html (landing page é o index.html)
+  // Assets referenciados com URL absoluta a partir da raiz (/), para o SPA
+  // funcionar servido na raiz do domínio dash.
   experimental: {
     renderBuiltUrl(filename) {
       return '/' + filename
