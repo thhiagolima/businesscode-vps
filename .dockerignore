@@ -1,0 +1,21 @@
+# Dependências e builds (reconstruídos na imagem)
+**/node_modules
+**/vendor
+**/dist
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+# Segredos e ambiente
+**/.env
+**/.env.local
+.env
+
+# Git e metadados
+.git
+.gitignore
+**/.DS_Store
+
+# Docs/specs não vão para a imagem
+docs/
