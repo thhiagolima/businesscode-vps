@@ -1,2 +1,4 @@
 .worktrees/
 .mcp.json
+.env
+backend/.env
