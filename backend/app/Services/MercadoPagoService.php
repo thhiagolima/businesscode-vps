@@ -73,6 +73,7 @@ class MercadoPagoService
             'transaction_amount' => $amount,
             'description' => $description,
             'payment_method_id' => 'pix',
+            'notification_url' => url('/api/v1/webhooks/mercadopago'),
             'payer' => [
                 'email' => $payerEmail,
             ],
@@ -98,6 +99,7 @@ class MercadoPagoService
             'transaction_amount' => $amount,
             'description' => $description,
             'payment_method_id' => 'bolbradesco',
+            'notification_url' => url('/api/v1/webhooks/mercadopago'),
             'payer' => [
                 'email' => $payerEmail,
                 'identification' => [
@@ -176,24 +178,53 @@ class MercadoPagoService
 
     private function processPaymentWebhook(string $mpPaymentId): void
     {
-        $mpPayment = $this->paymentClient->get((int) $mpPaymentId);
-        if (!$mpPayment) return;
-
-        $payment = Payment::where('mp_payment_id', $mpPaymentId)->first();
+        $payment = Payment::withoutGlobalScopes()
+            ->where('mp_payment_id', $mpPaymentId)
+            ->first();
         if (!$payment) {
             Log::warning('[MercadoPago] webhook payment not found locally', ['mp_payment_id' => $mpPaymentId]);
             return;
         }
 
-        $oldStatus = $payment->status;
-        $newStatus = $this->mapPaymentStatus($mpPayment->status);
+        $this->reconcilePayment($payment);
+    }
 
-        if ($oldStatus === $newStatus) return;
+    public function reconcilePayment(Payment $payment): Payment
+    {
+        if (!$payment->mp_payment_id) {
+            return $payment;
+        }
+
+        $oldStatus = $payment->status;
+
+        if (in_array($oldStatus, ['approved', 'rejected', 'refunded', 'cancelled'], true)) {
+            return $payment;
+        }
+
+        $resp = $this->client()->get("/v1/payments/{$payment->mp_payment_id}");
+        if (!$resp->successful()) {
+            Log::channel($this->logChannel())->warning('mp.payment_fetch_failed', [
+                'payment_id' => $payment->id,
+                'mp_payment_id' => $payment->mp_payment_id,
+                'status' => $resp->status(),
+            ]);
+            return $payment;
+        }
+
+        $mpPayment = $resp->json();
+        $mpStatus = (string) ($mpPayment['status'] ?? '');
+        if ($mpStatus === '') {
+            return $payment;
+        }
+
+        $newStatus = $this->mapPaymentStatus($mpStatus);
+
+        if ($oldStatus === $newStatus) return $payment;
 
         DB::transaction(function () use ($payment, $newStatus, $mpPayment) {
             $payment->update([
                 'status' => $newStatus,
-                'net_amount' => $mpPayment->transaction_details->net_received_amount ?? $payment->net_amount,
+                'net_amount' => data_get($mpPayment, 'transaction_details.net_received_amount', $payment->net_amount),
                 'paid_at' => $newStatus === 'approved' ? now() : $payment->paid_at,
             ]);
 
@@ -203,7 +234,7 @@ class MercadoPagoService
         });
 
         Log::info('[MercadoPago] payment webhook processed', [
-            'mp_payment_id' => $mpPaymentId,
+            'mp_payment_id' => $payment->mp_payment_id,
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'tenant_id' => $payment->tenant_id,
@@ -212,8 +243,10 @@ class MercadoPagoService
         \App\Models\AuditLog::record('payment.webhook_processed', 'Payment', $payment->id, [
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
-            'mp_payment_id' => $mpPaymentId,
+            'mp_payment_id' => $payment->mp_payment_id,
         ], null, $payment->tenant_id);
+
+        return $payment->fresh();
     }
 
     private function processSubscriptionWebhook(string $mpSubscriptionId): void

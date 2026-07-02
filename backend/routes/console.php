@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\Billing\ReconcilePendingMercadoPagoPayments;
 use App\Console\Commands\DispatchScheduledCampaigns;
 use App\Console\Commands\FunnelTickCommand;
 use Illuminate\Foundation\Inspiring;
@@ -20,4 +21,11 @@ Schedule::command(DispatchScheduledCampaigns::class)
 Schedule::command(FunnelTickCommand::class)
     ->everyMinute()
     ->withoutOverlapping(2)
+    ->runInBackground();
+
+// Confirma pagamentos Mercado Pago mesmo quando o usuÃ¡rio sai da pÃ¡gina
+// ou quando a entrega do webhook atrasa/falha.
+Schedule::command(ReconcilePendingMercadoPagoPayments::class)
+    ->everyFiveMinutes()
+    ->withoutOverlapping(10)
     ->runInBackground();

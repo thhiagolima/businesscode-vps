@@ -287,6 +287,7 @@ class PaymentController extends Controller
                     'token' => $request->card_token,
                     'installments' => 1,
                     'external_reference' => 'payment_' . $payment->id,
+                    'notification_url' => url('/api/v1/webhooks/mercadopago'),
                     'payer' => ['email' => $request->payer_email],
                 ]);
             } catch (\Throwable $mpError) {
@@ -389,6 +390,10 @@ class PaymentController extends Controller
         $tenant = request()->user()->tenant;
         if (!$tenant) return ApiResponse::error('Tenant não encontrado.', [], 404);
         $payment = Payment::where('id', $id)->where('tenant_id', $tenant->id)->firstOrFail();
+
+        if ($payment->status === 'pending' && $payment->mp_payment_id) {
+            $payment = $this->mpService->reconcilePayment($payment);
+        }
 
         return ApiResponse::success([
             'payment_id' => $payment->id,

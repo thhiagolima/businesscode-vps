@@ -42,13 +42,26 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = async () => {
-    try {
-      const { post } = useApi()
-      await post('/auth/logout')
-    } catch (_) {}
+  const clearSession = () => {
     user.value = null
     token.value = null
+  }
+
+  const logout = async () => {
+    const hadToken = !!token.value
+    const { post } = useApi()
+    const logoutRequest = hadToken ? post('/auth/logout') : Promise.resolve()
+
+    clearSession()
+
+    if (!hadToken) return
+
+    try {
+      await Promise.race([
+        logoutRequest,
+        new Promise(resolve => setTimeout(resolve, 1500)),
+      ])
+    } catch (_) {}
   }
 
   const initialize = async () => {
@@ -87,7 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {}
   }
 
-  return { user, token, isLoading, isAuthenticated, login, logout, initialize, setUser, updateCredits, refreshUser }
+  return { user, token, isLoading, isAuthenticated, login, logout, clearSession, initialize, setUser, updateCredits, refreshUser }
 }, {
   persist: {
     paths: ['token', 'user'],

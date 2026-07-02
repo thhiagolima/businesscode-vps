@@ -29,7 +29,7 @@
 
         <!-- User -->
         <div class="nav-item dropdown">
-          <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="dropdown">
+          <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="dropdown" data-bc-user-menu>
             <span class="avatar avatar-sm"
               style="background:linear-gradient(135deg,#0064ff,#0054d8);color:#fff;font-size:0.7rem;font-weight:600;width:34px;height:34px;border-radius:10px">
               {{ userInitials }}
@@ -41,16 +41,16 @@
           </a>
           <div class="dropdown-menu dropdown-menu-end"
             style="min-width:200px;background:var(--bc-gray);border:none;border-radius:var(--bc-radius-lg)">
-            <a class="dropdown-item" @click.prevent="$router.push('/profile')">
+            <button type="button" class="dropdown-item" @click="goProfile">
               <i class="ti ti-user me-2"></i> Meu perfil
-            </a>
-            <a class="dropdown-item" @click.prevent="goSettings">
+            </button>
+            <button type="button" class="dropdown-item" @click="goSettings">
               <i class="ti ti-settings me-2"></i> Configurações
-            </a>
+            </button>
             <div class="dropdown-divider" style="border-color:var(--bc-outline)"></div>
-            <a class="dropdown-item text-danger" @click.prevent="logout">
+            <button type="button" class="dropdown-item text-danger" :disabled="isLoggingOut" @click="logout">
               <i class="ti ti-logout me-2"></i> Sair
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
@@ -68,6 +68,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const { theme, toggle: toggleTheme } = useTheme()
+const isLoggingOut = ref(false)
 
 const userName = computed(() => auth.user?.name ?? '')
 const userEmail = computed(() => auth.user?.email ?? '')
@@ -89,12 +90,32 @@ const userInitials = computed(() => {
   return ((parts[0]?.charAt(0) ?? '') + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : '')).toUpperCase()
 })
 
+const hideUserDropdown = () => {
+  const toggle = document.querySelector<HTMLElement>('[data-bc-user-menu]')
+  if (!toggle) return
+  const instance = (window as any).bootstrap?.Dropdown?.getInstance(toggle)
+  instance?.hide()
+}
+
+const goProfile = () => {
+  hideUserDropdown()
+  router.push('/profile')
+}
+
 const goSettings = () => {
+  hideUserDropdown()
   router.push(auth.user?.role === 'superadmin' ? '/admin/settings/ai' : '/profile')
 }
+
 const logout = async () => {
-  await auth.logout()
-  router.push('/login')
+  if (isLoggingOut.value) return
+  isLoggingOut.value = true
+  hideUserDropdown()
+  const pendingLogout = auth.logout()
+  await router.replace('/login')
+  pendingLogout.finally(() => {
+    isLoggingOut.value = false
+  })
 }
 </script>
 

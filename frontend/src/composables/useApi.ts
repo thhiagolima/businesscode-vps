@@ -40,8 +40,8 @@ export function useApi() {
         // - /auth/logout retornando 401 → token já inválido, sem necessidade de re-logout
         const isAuthRoute = url.includes('/auth/')
         if (error.response?.status === 401 && !isAuthRoute) {
-          auth.logout()
-          router.push('/login')
+          auth.clearSession()
+          router.replace('/login')
         }
         return Promise.reject(error)
       }

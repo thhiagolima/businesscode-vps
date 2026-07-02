@@ -3,12 +3,12 @@
 ###########################################
 # Stage 1: build do SPA Vue (dash)
 ###########################################
-FROM node:20-alpine AS frontend-build
+FROM node:22.12-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY frontend/ ./
-ARG VITE_API_URL=https://api.businesscode.com.br/v1
+ARG VITE_API_URL=https://api.businesscode.com.br/api/v1
 ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 # Saída: /app/frontend/dist/index.html é o entrypoint do SPA (sem rename)
@@ -16,7 +16,7 @@ RUN npm run build
 ###########################################
 # Stage 2: build do site Astro (raiz)
 ###########################################
-FROM node:20-alpine AS site-build
+FROM node:22.12-alpine AS site-build
 WORKDIR /app/site
 COPY site/package*.json ./
 RUN npm ci
@@ -61,7 +61,8 @@ CMD ["php-fpm"]
 FROM nginx:1.27-alpine AS nginx
 # Remove o default server da imagem base (evita conflito de server padrão na :80)
 RUN rm -f /etc/nginx/conf.d/default.conf
-COPY docker/nginx/conf.d/ /etc/nginx/conf.d/
+COPY docker/nginx/conf.d/api.conf /etc/nginx/conf.d/api.conf
+COPY docker/nginx/conf.d/dash.conf /etc/nginx/conf.d/dash.conf
 COPY --from=frontend-build /app/frontend/dist /var/www/dash
 COPY --from=site-build     /app/site/dist     /var/www/site
 # public/ do Laravel (para try_files de estáticos no domínio api)
